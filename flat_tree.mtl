@@ -1,0 +1,22 @@
+# Blender MTL File: 'None'
+# Material Count: 2
+
+newmtl Leaves
+Ns 96.078431 #specular exponent (0-1000)
+Ka 1.000000 1.000000 1.000000 #ambient (r, g, b)
+Kd 0.000000 0.214035 0.004334 #diffuse (r, g, b)
+Ks 0.000000 0.000000 0.000000 #specular (r, g, b)
+Ke 0.000000 0.000000 0.000000 #emissive
+Ni 1.000000 #index of refraction (optical density)
+d 1.000000 #transparency (dissolve)
+illum 1
+
+newmtl Wood
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.273907 0.058412 0.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 1
