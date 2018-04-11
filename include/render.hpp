@@ -11,9 +11,12 @@
 #include "object.hpp"
 
 namespace ray {
+enum RenderStyle { SINGLE_PASS, HORIZONTAL_PASS, VERTICAL_PASS, SCATTER_PASS };
+
 void Render(const std::vector<std::unique_ptr<Object>>& objs,
             const std::vector<std::unique_ptr<Light>>& lights, unsigned width,
-            unsigned height, double fov);
+            unsigned height, double fov, RenderStyle style = SINGLE_PASS,
+            int passes = 1);
 
 Color CastRay(const estl::vector::Vector<double, 3>& start,
               const estl::vector::Vector<double, 3>& dir,
@@ -24,7 +27,7 @@ Color CastRay(const estl::vector::Vector<double, 3>& start,
 bool TraceRay(const estl::vector::Vector<double, 3>& start,
               const estl::vector::Vector<double, 3>& dir,
               const std::vector<std::unique_ptr<Object>>& objs,
-              Intersect& inter);
+              IntersectData& inter);
 }  // namespace ray
 
 #endif  // RAY_RENDER_HPP_

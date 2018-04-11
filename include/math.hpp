@@ -9,6 +9,7 @@
 
 namespace ray {
 bool Quadradic(double a, double b, double c, double& x0, double& x1);
+double Clamp(double val, double min, double max);
 }  // namespace ray
 
 #endif  // RAY_MAP_HPP_
