@@ -1,0 +1,304 @@
+#include "object.hpp"
+
+#include <algorithm>
+#include <array>
+#include <fstream>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include <estl/vector.hpp>
+
+#include "material.hpp"
+#include "math.hpp"
+
+#include <iostream>
+
+using namespace estl::vector;
+
+std::vector<std::string> split(const std::string& s, char delim) {
+  std::stringstream ss(s);
+  std::string item;
+  std::vector<std::string> tokens;
+  while (getline(ss, item, delim)) {
+    tokens.push_back(item);
+  }
+  return tokens;
+}
+
+ray::Object::Object() {
+  mat.fill_diagonal(1);
+  mat_inv.fill_diagonal(1);
+}
+ray::Object::Object(std::vector<std::string> str,
+                    std::map<std::string, Material> mats) {
+  mat.fill_diagonal(1);
+  mat_inv.fill_diagonal(1);
+  std::map<std::string, Material>::iterator mat;
+  for (std::string& it : str) {
+    if (it.size() == 0) {
+      continue;
+    }
+    if (it[0] == 'o') {
+      name = it.substr(2);
+    } else if (it[0] == 'v' && it[1] == ' ') {
+      double x = 0, y = 0, z = 0;
+      sscanf(it.c_str(), "v %lf %lf %lf", &x, &y, &z);
+      vertices.push_back(x);
+      vertices.push_back(y);
+      vertices.push_back(z);
+      center[0] += x;
+      center[1] += y;
+      center[2] += z;
+      value_max[0] = std::max(value_max[0], x);
+      value_max[1] = std::max(value_max[1], y);
+      value_max[2] = std::max(value_max[2], z);
+    } else if (it[0] == 'v' && it[1] == 'n') {
+      double x = 0, y = 0, z = 0;
+      sscanf(it.c_str(), "vn %lf %lf %lf", &x, &y, &z);
+      vertex_normals.push_back(x);
+      vertex_normals.push_back(y);
+      vertex_normals.push_back(z);
+    } else if (it[0] == 'f' && it[1] == ' ') {
+      char a[20], b[20], c[20];
+      std::vector<std::string> tokens;
+      sscanf(it.c_str(), "f %s %s %s", a, b, c);
+      std::array<std::array<int, 3>, 3> face;
+      tokens = split(std::string(a), '/');
+      for (auto& it : tokens) {
+        if (it == std::string()) {
+          it = "0";
+        }
+      }
+      face[0][0] = std::stoi(tokens[0]);
+      face[1][0] = std::stoi(tokens[1]);
+      face[2][0] = std::stoi(tokens[2]);
+      tokens = split(std::string(b), '/');
+      for (auto& it : tokens) {
+        if (it == std::string()) {
+          it = "0";
+        }
+      }
+      face[0][1] = std::stoi(tokens[0]);
+      face[1][1] = std::stoi(tokens[1]);
+      face[2][1] = std::stoi(tokens[2]);
+      tokens = split(std::string(c), '/');
+      for (auto& it : tokens) {
+        if (it == std::string()) {
+          it = "0";
+        }
+      }
+      face[0][2] = std::stoi(tokens[0]);
+      face[1][2] = std::stoi(tokens[1]);
+      face[2][2] = std::stoi(tokens[2]);
+      faces[mat->second].push_back(face);
+    } else if (it.compare(0, 6, "usemtl") == 0) {
+      mat = mats.find(it.substr(7));
+      if (mat == mats.end()) {
+        std::cout << "Material not found!";
+      }
+    }
+  }
+  center[0] /= (vertices.size() / 3.0);
+  center[1] /= (vertices.size() / 3.0);
+  center[2] /= (vertices.size() / 3.0);
+}
+
+void ray::Object::SetVerticies(std::vector<double> verts) { vertices = verts; }
+void ray::Object::SetVerticies(std::vector<std::array<double, 3>> verts) {
+  vertices.clear();
+  for (auto& it : verts) {
+    vertices.push_back(it[0]);
+    vertices.push_back(it[1]);
+    vertices.push_back(it[2]);
+  }
+}
+
+void ray::Object::SetIndicies(ray::Material mat, std::vector<int> ints) {
+  for (std::size_t i = 0; i < ints.size(); i += 3) {
+    faces[mat].push_back(std::array<std::array<int, 3>, 3>{
+        {{{ints[i], ints[i + 1], ints[i + 2]}},
+         {{0, 0, 0}},
+         {{ints[i], ints[i + 1], ints[i + 2]}}}});
+  }
+}
+
+void ray::Object::SetIndicies(ray::Material mat,
+                              std::vector<std::array<int, 3>> ints) {
+  for (auto& it : ints) {
+    faces[mat].push_back(
+        std::array<std::array<int, 3>, 3>{{it, {{0, 0, 0}}, it}});
+  }
+}
+
+void ray::Object::CalculateNormals() {
+  std::vector<std::pair<int, Vector<double, 3>>> norms(vertices.size());
+  for (auto& mat : faces) {
+    for (auto& it : mat.second) {
+      Vector<double, 3> a({vertices[(3 * it[0][0])],
+                           vertices[(3 * it[0][0]) + 1],
+                           vertices[(3 * it[0][0]) + 2]});
+      Vector<double, 3> b({vertices[(3 * it[0][1])],
+                           vertices[(3 * it[0][1]) + 1],
+                           vertices[(3 * it[0][1]) + 2]});
+      Vector<double, 3> c({vertices[(3 * it[0][1])],
+                           vertices[(3 * it[0][1]) + 1],
+                           vertices[(3 * it[0][1]) + 2]});
+      norms[it[0][0]].first++;
+      norms[it[0][0]].second += cross(b - a, c - a);
+      norms[it[0][1]].first++;
+      norms[it[0][1]].second += cross(a - b, c - b);
+      norms[it[0][2]].first++;
+      norms[it[0][2]].second += cross(a - c, b - c);
+    }
+  }
+  for(auto& it : norms){
+    it.second /= it.first;
+    vertex_normals.push_back(it.second[0]);
+    vertex_normals.push_back(it.second[1]);
+    vertex_normals.push_back(it.second[2]);
+  }
+}
+
+void ray::Object::Center() {
+  for (std::size_t i = 0; i < vertices.size(); i += 3) {
+    vertices[i] -= center[0];
+    vertices[i + 1] -= center[1];
+    vertices[i + 2] -= center[2];
+  }
+  value_max[0] -= center[0];
+  value_max[1] -= center[1];
+  value_max[2] -= center[2];
+  center = {{0, 0, 0}};
+}
+
+void ray::Object::Normalize(bool maintain_ratio) {
+  if (maintain_ratio == true) {
+    double factor =
+        std::max(value_max[0], std::max(value_max[1], value_max[2]));
+    for (auto& it : vertices) {
+      it /= factor;
+    }
+    value_max[0] /= factor;
+    value_max[1] /= factor;
+    value_max[2] /= factor;
+  } else {
+    for (std::size_t i = 0; i < vertices.size(); i += 3) {
+      vertices[i] /= value_max[0];
+      vertices[i + 1] /= value_max[1];
+      vertices[i + 2] /= value_max[2];
+    }
+    value_max = {{1, 1, 1}};
+  }
+}
+
+void ray::Object::Translate(double x, double y, double z) {
+  estl::matrix::Matrix<double, 4, 4> trans;
+  trans.fill_diagonal(1);
+  trans(0, 3) = x;
+  trans(1, 3) = y;
+  trans(2, 3) = z;
+  mat = trans * mat;
+  trans(0, 3) = -x;
+  trans(1, 3) = -y;
+  trans(2, 3) = -z;
+  mat_inv = mat_inv * trans;
+}
+
+bool ray::Object::IntersectSphere(const estl::vector::Vector<double, 3>& start,
+                                  const estl::vector::Vector<double, 3>& dir,
+                                  double& t) {
+  // Vector<double, 3> L = center - start;
+  // Vector<double, 3> L = start;
+  double t0, t1;
+  double a = dot(dir, dir);
+  double b = 2 * dot(dir, start);
+  double c =
+      dot(start, start) - std::max(value_max[0], std::max(value_max[1], value_max[2]));
+  if (Quadradic(a, b, c, t0, t1) == false) {
+    return false;
+  }
+  if (t0 > t1) {
+    std::swap(t0, t1);
+  }
+  if (t0 < 0) {
+    if (t1 < 0) {
+      return false;
+    }
+    t = t1;
+  } else {
+    t = t0;
+  }
+  return true;
+}
+
+bool ray::Object::Intersect(const estl::vector::Vector<double, 3>& start,
+                            const estl::vector::Vector<double, 3>& dir,
+                            ray::Intersect& inter) {
+  Vector<double, 3> local_start(mat_inv * Vector<double, 4>(start, 1), 0);
+  if (IntersectSphere(local_start, dir, inter.t_near) == true) {
+    if(sphere == true){
+      inter.mat = sphere_mat;
+      inter.point = start + (dir * inter.t_near);
+      // inter.normal = normalize(inter.point - Vector<double, 3>(mat_inv * Vector<double, 4>(center, 1), 0));
+      inter.normal = normalize(local_start + (dir * inter.t_near));
+      // std::cout << inter.point << inter.normal << "\n";
+      return true;
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool ray::Object::IntersectPolygon(estl::vector::Vector<double, 3> start,
+                                   estl::vector::Vector<double, 3> vec,
+                                   double& t, Material& mat) {
+  return false;
+}
+
+std::vector<std::unique_ptr<ray::Object>> ray::ParseObjFile(
+    std::string file_path) {
+  std::ifstream file(file_path);
+  std::vector<std::unique_ptr<Object>> objects;
+  if (file.is_open()) {
+    std::string line;
+    bool reading = false;
+    std::vector<std::string> current;
+    std::map<std::string, Material> materials;
+    while (getline(file, line)) {
+      if (line.compare(0, 6, "mtllib") == 0) {
+        materials = ParseMaterialFile(
+            file_path.substr(0, file_path.rfind('/')) + "/" + line.substr(7));
+      }
+      if (line.size() != 0 && line[0] == 'o') {
+        if (reading == true) {
+          objects.emplace_back(
+              std::make_unique<Object>(Object(current, materials)));
+          objects.back()->Center();
+          current.clear();
+        } else {
+          reading = true;
+        }
+      }
+      if (reading == true) {
+        current.push_back(line.substr(0, line.find('#')));
+      }
+    }
+    objects.emplace_back(std::make_unique<Object>(Object(current, materials)));
+    objects.back()->Center();
+    file.close();
+  }
+  return objects;
+}
+
+std::unique_ptr<ray::Object> ray::GenerateSphere(double radius,
+    std::size_t faces) {
+  std::unique_ptr<Object> obj = std::make_unique<ray::Object>(Object());
+  obj->value_max[0] = 1;
+  obj->sphere = true;
+  return obj;
+}

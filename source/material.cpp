@@ -112,3 +112,7 @@ std::ostream& ray::operator<<(std::ostream& out, Material mat) {
       << ", d: " << mat.dissolve << ", illum: " << mat.illum;
   return out;
 }
+
+bool ray::operator<(const Material& lhs, const Material& rhs){
+  return lhs.name < rhs.name;
+}

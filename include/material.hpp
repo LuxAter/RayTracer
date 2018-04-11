@@ -21,6 +21,7 @@ namespace ray {
 
   std::map<std::string, Material> ParseMaterialFile(std::string file_path);
   std::ostream& operator<<(std::ostream& out, Material mat);
+  bool operator<(const Material& lhs, const Material& rhs);
 } // namespace ray
 
 #endif  // RAY_MATERIAL_HPP_
