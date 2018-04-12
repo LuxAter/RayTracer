@@ -37,14 +37,21 @@ int main(int argc, char const* argv[]) {
   // lights.push_back(std::make_unique<ray::Light>(ray::Light({{0.0, 0.0, 5.0}}, {0.0, 1.0, 0.0}, 10)));
   // lights.push_back(std::make_unique<ray::Light>(ray::Light({{0.0, 0.0, 3.0}}, {0.0, 0.0, 1.0}, 10)));
 
-  // lights.push_back(ray::MakePointLight({{5.0, 0.0, 10.0}}, {1.0, 0.0, 0.0}));
+  lights.push_back(ray::MakePointLight({{10.0, 3.0, 0.0}}, {1.0, 0.0, 0.0}, -1));
+  lights.push_back(ray::MakePointLight({{0.0, 13.0, 0.0}}, {0.0, 1.0, 0.0}, -1));
+  lights.push_back(ray::MakePointLight({{-10.0, 3.0, 0.0}}, {0.0, 0.0, 1.0}, -1));
+  // lights.push_back(ray::MakeDistantLight({{0.5, -1.0, 0.5}}, {1.0, 0.0, 0.0}));
+  // lights.push_back(ray::MakeDistantLight({{0.0, -1.0, 0.5}}, {0.0, 1.0, 0.0}));
+  // lights.push_back(ray::MakeDistantLight({{0.0, -1.0, 0.5}}, {1.0, 1.0, 1.0}));
+  // lights.push_back(ray::MakeDistantLight({{-0.5, -1.0, 0.5}}, {0.0, 0.0, 1.0}));
   // lights.push_back(std::make_unique<ray::Light>(ray::Light({{5.0, 0.0, 10.0}}, {1.0, 0.0, 0.0}, 10)));
   // lights.push_back(std::make_unique<ray::Light>(ray::Light({{-5.0, 0.0, 10.0}}, {0.0, 1.0, 0.0}, 10)));
   // lights.push_back(std::make_unique<ray::Light>(ray::Light({{0.0, 5.0, 10.0}}, {0.0, 0.0, 1.0}, 10)));
   // lights.push_back(std::make_unique<ray::Light>(ray::Light({{0, 100.0, -10}}, {1.0, 1.0, 1.0}, 10)));
   // lights.push_back(std::make_unique<ray::Light>(ray::Light({{0.0, 0.0, 2.0}}, {1.0, 1.0, 1.0}, 10)));
+  objs.push_back(ray::GeneratePlane({0, -1, 0}, {0, 1, 0}, mat));
   objs.push_back(ray::GenerateSphere(1, mat));
-  objs.back()->Translate(0, 0, 1);
+  objs.back()->Translate(0, 0, 5);
   // objs.push_back(ray::GenerateSphere(0.25, mat));
   // objs.back()->Translate(-1, 1, 10);
   // objs.push_back(ray::GenerateSphere(0.25, mat));
@@ -70,7 +77,7 @@ int main(int argc, char const* argv[]) {
   entis_init("Ray", WIDTH, HEIGHT, 0, NULL);
   entis_clear();
   entis_set_color_drgb(1.0, 0.0, 1.0);
-  ray::Render(objs, lights, WIDTH, HEIGHT, 45.0);
+  ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::SCATTER_PASS, 7);
   entis_wait_event_type(ENTIS_KEY_RELEASE);
   entis_term();
 

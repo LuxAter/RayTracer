@@ -34,6 +34,14 @@ ray::Object::Object() {
   mat_inv_.fill_diagonal(1);
 }
 
+ray::Object::~Object() {}
+
+bool ray::Object::Intersect(const estl::vector::Vector<double, 3>& start,
+                            const estl::vector::Vector<double, 3>& dir,
+                            IntersectData& inter) {
+  return false;
+}
+
 void ray::Object::Translate(double x, double y, double z) {
   estl::matrix::Matrix<double, 4, 4> trans;
   trans.fill_diagonal(1);
@@ -48,38 +56,90 @@ void ray::Object::Translate(double x, double y, double z) {
 }
 
 ray::Sphere::Sphere(const double& radius, Material mat)
-    : Object(), radius_(radius), radius_square_(radius * radius) {
+    : Object(),
+      material_(mat),
+      radius_(radius),
+      radius_square_(radius * radius) {
   this->name = "sphere";
-  material_ = mat;
 }
 
 bool ray::Sphere::Intersect(const estl::vector::Vector<double, 3>& start,
-                       const estl::vector::Vector<double, 3>& dir,
-                       IntersectData& inter) {
+                            const estl::vector::Vector<double, 3>& dir,
+                            IntersectData& inter) {
   Vector<double, 3> local_start(mat_inv_ * Vector<double, 4>(start, 1), 0);
   double t0, t1;
   double a = dot(dir, dir);
   double b = 2 * dot(dir, local_start);
-  double c = dot(start, start) - radius_square_;
-  if(!Quadradic(a, b, c, t0, t1)){
+  double c = dot(local_start, local_start) - radius_square_;
+  if (Quadradic(a, b, c, t0, t1) == false) {
     return false;
   }
-  if(t0 > t1){
+  if (t0 > t1) {
     std::swap(t0, t1);
   }
-  if(t0 < 0){
-    if(t1 <0 ){
+  if (t0 < 0) {
+    if (t1 < 0) {
       return false;
     }
     inter.t_near = t1;
-  }else{
+  } else {
     inter.t_near = t0;
   }
   inter.mat = material_;
   inter.point = start + (dir * inter.t_near);
-  inter.normal = normalize(inter.point);
+  inter.normal = normalize(local_start + (dir * inter.t_near));
   return true;
 }
+
+ray::Plane::Plane(const estl::vector::Vector<double, 3>& origin,
+                  const estl::vector::Vector<double, 3>& normal, Material mat)
+    : Object(),
+      material_(mat),
+      constant_(-dot(origin, normal)),
+      origin_(origin),
+      normal_(normalize(normal)) {
+  this->name = "plane";
+}
+bool ray::Plane::Intersect(const estl::vector::Vector<double, 3>& start,
+                           const estl::vector::Vector<double, 3>& dir,
+                           IntersectData& inter) {
+  Vector<double, 3> local_start(mat_inv_ * Vector<double, 4>(start, 1), 0);
+  double a = dot(normal_, dir);
+  double b = dot(normal_, local_start) - constant_;
+  if (a == 0) {
+    return false;
+  } else if (b / a < 0) {
+    return false;
+  }
+  inter.t_near = b / a;
+  inter.mat = material_;
+  inter.point = start + (dir * inter.t_near);
+  inter.normal = normal_;
+  return true;
+}
+
+std::unique_ptr<ray::Object> ray::GenerateSphere(double radius, Material mat) {
+  return std::unique_ptr<Object>(new Sphere(radius, mat));
+}
+std::unique_ptr<ray::Object> ray::GeneratePlane(
+    estl::vector::Vector<double, 3> origin,
+    estl::vector::Vector<double, 3> normal, Material mat) {
+  return std::unique_ptr<Object>(new Plane(origin, normal, mat));
+}
+
+// bool ray::Object::IntersectPlane(const estl::vector::Vector<double, 3>&
+// start,
+//     const estl::vector::Vector<double, 3>& dir, double& t){
+//   double a = dot(center, dir);
+//   double b = dot(center, start) - plane_const;
+//   if(a == 0){
+//     return false;
+//   }else if(b / a < 0){
+//     return false;
+//   }
+//   t = b / a;
+//   return true;
+// }
 
 // ray::Object::Object(std::vector<std::string> str,
 //                     std::map<std::string, Material> mats) {

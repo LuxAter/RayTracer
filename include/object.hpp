@@ -18,6 +18,7 @@ struct IntersectData;
 
 class Object {
  public:
+  enum Type { DIFFUSE, REFLECTION, REFLECTION_REFRACTION };
   Object();
   virtual ~Object();
 
@@ -27,13 +28,15 @@ class Object {
                          const estl::vector::Vector<double, 3>& dir,
                          IntersectData& inter);
 
- protected:
   std::string name;
+  Type type = DIFFUSE;
+ protected:
   estl::matrix::Matrix<double, 4, 4> mat_, mat_inv_;
 };
 
 class Sphere : public Object {
-  Sphere(const double& radius, Material mat=Material());
+ public:
+  Sphere(const double& radius, Material mat = Material());
 
   bool Intersect(const estl::vector::Vector<double, 3>& start,
                  const estl::vector::Vector<double, 3>& dir,
@@ -43,6 +46,23 @@ class Sphere : public Object {
   Material material_;
   double radius_, radius_square_;
 };
+
+class Plane : public Object {
+ public:
+  Plane(const estl::vector::Vector<double, 3>& origin,
+        const estl::vector::Vector<double, 3>& normal,
+        Material mat = Material());
+
+  bool Intersect(const estl::vector::Vector<double, 3>& start,
+                 const estl::vector::Vector<double, 3>& dir,
+                 IntersectData& inter);
+
+ protected:
+  Material material_;
+  double constant_;
+  estl::vector::Vector<double, 3> origin_, normal_;
+};
+
 // class Object {
 //  public:
 //   enum Type { MESH, SPHERE, PLANE };
@@ -96,10 +116,11 @@ struct IntersectData {
 };
 
 std::vector<std::unique_ptr<Object>> ParseObjFile(std::string file_path);
-std::unique_ptr<Object> GenerateSphere(double radus, Material mat);
-std::unique_ptr<Object> GeneratePlane(estl::vector::Vector<double, 3> center,
+std::unique_ptr<Object> GenerateSphere(double radius,
+                                       Material mat = Material());
+std::unique_ptr<Object> GeneratePlane(estl::vector::Vector<double, 3> origin,
                                       estl::vector::Vector<double, 3> normal,
-                                      Material mat);
+                                      Material mat = Material());
 }  // namespace ray
 
 #endif  // RAY_OBJECT_HPP_

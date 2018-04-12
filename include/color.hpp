@@ -13,9 +13,13 @@ namespace ray {
       Color(double red, double green, double blue);
       explicit Color(estl::vector::Vector<double, 3> vec);
 
+      void Clamp();
+
+      estl::vector::Vector<double, 3> Vector();
+
       Color& operator+=(const Color& rhs);
 
-      double r, g, b;
+      double r = 0.0, g = 0.0, b = 0.0;
   };
 
   Color Combine(Color lhs, double lhs_perc, Color rhs, double rhs_perc);
