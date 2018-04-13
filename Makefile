@@ -1,7 +1,7 @@
 SHELL = /bin/bash
 
 export NAME= ray
-export LINK= -lentis -lxcb
+export LINK= -lentis -lxcb -lpthread
 export INCLUDE=
 export TYPE= TYPE(lib/exe)
 

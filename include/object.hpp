@@ -30,6 +30,7 @@ class Object {
 
   std::string name;
   Type type = DIFFUSE;
+
  protected:
   estl::matrix::Matrix<double, 4, 4> mat_, mat_inv_;
 };
@@ -60,6 +61,21 @@ class Plane : public Object {
  protected:
   Material material_;
   double constant_;
+  estl::vector::Vector<double, 3> origin_, normal_;
+};
+
+class Circle : public Object {
+ public:
+  Circle(const estl::vector::Vector<double, 3>& origin,
+         const estl::vector::Vector<double, 3>& normal, const double& radius,
+         Material mat = Material());
+  bool Intersect(const estl::vector::Vector<double, 3>& start,
+                 const estl::vector::Vector<double, 3>& dir,
+                 IntersectData& inter);
+
+ protected:
+  Material material_;
+  double constant_, radius_;
   estl::vector::Vector<double, 3> origin_, normal_;
 };
 
@@ -121,6 +137,10 @@ std::unique_ptr<Object> GenerateSphere(double radius,
 std::unique_ptr<Object> GeneratePlane(estl::vector::Vector<double, 3> origin,
                                       estl::vector::Vector<double, 3> normal,
                                       Material mat = Material());
+std::unique_ptr<Object> GenerateCircle(estl::vector::Vector<double, 3> origin,
+                                       estl::vector::Vector<double, 3> normal,
+                                       double radius,
+                                       Material mat = Material());
 }  // namespace ray
 
 #endif  // RAY_OBJECT_HPP_

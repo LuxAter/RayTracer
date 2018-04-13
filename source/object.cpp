@@ -105,7 +105,18 @@ bool ray::Plane::Intersect(const estl::vector::Vector<double, 3>& start,
                            IntersectData& inter) {
   Vector<double, 3> local_start(mat_inv_ * Vector<double, 4>(start, 1), 0);
   double a = dot(normal_, dir);
-  double b = dot(normal_, local_start) - constant_;
+  // if (a != 0) {
+  //   double t = -(dot(normal_, local_start) + constant_) / a;
+  //   if (t > 0 && t < inter.t_near) {
+  //     inter.t_near = t;
+  //     inter.mat = material_;
+  //     inter.point = start + (dir * inter.t_near);
+  //     inter.normal = normal_;
+  //     return true;
+  //   }
+  // }
+  // return false;
+  double b = constant_ - dot(normal_, local_start);
   if (a == 0) {
     return false;
   } else if (b / a < 0) {
@@ -118,13 +129,52 @@ bool ray::Plane::Intersect(const estl::vector::Vector<double, 3>& start,
   return true;
 }
 
+ray::Circle::Circle(const estl::vector::Vector<double, 3>& origin,
+                    const estl::vector::Vector<double, 3>& normal,
+                    const double& radius, Material mat)
+    : Object(),
+      material_(mat),
+      constant_(-dot(origin, normal)),
+      radius_(radius),
+      origin_(origin),
+      normal_(normalize(normal)) {
+  this->name = "plane";
+}
+bool ray::Circle::Intersect(const estl::vector::Vector<double, 3>& start,
+                            const estl::vector::Vector<double, 3>& dir,
+                            IntersectData& inter) {
+  Vector<double, 3> local_start(mat_inv_ * Vector<double, 4>(start, 1), 0),
+      dist;
+  double a = dot(normal_, dir);
+  double b = dot(normal_, local_start) - constant_;
+  if (a == 0) {
+    return false;
+  } else if (b / a < 0) {
+    return false;
+  }
+  inter.t_near = b / a;
+  inter.mat = material_;
+  inter.point = start + (dir * inter.t_near);
+  inter.normal = normal_;
+  dist = inter.point - origin_;
+  if (length(dist) > radius_) {
+    return false;
+  }
+  return true;
+}
+
 std::unique_ptr<ray::Object> ray::GenerateSphere(double radius, Material mat) {
   return std::unique_ptr<Object>(new Sphere(radius, mat));
 }
 std::unique_ptr<ray::Object> ray::GeneratePlane(
     estl::vector::Vector<double, 3> origin,
     estl::vector::Vector<double, 3> normal, Material mat) {
-  return std::unique_ptr<Object>(new Plane(origin, normal, mat));
+  return std::unique_ptr<Object>(new Plane(origin * -1, normal, mat));
+}
+std::unique_ptr<ray::Object> ray::GenerateCircle(
+    estl::vector::Vector<double, 3> origin,
+    estl::vector::Vector<double, 3> normal, double radius, Material mat) {
+  return std::unique_ptr<Object>(new Circle(origin, normal, radius, mat));
 }
 
 // bool ray::Object::IntersectPlane(const estl::vector::Vector<double, 3>&

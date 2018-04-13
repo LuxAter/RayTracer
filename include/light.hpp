@@ -49,7 +49,7 @@ std::unique_ptr<Light> MakeDistantLight(
     const Color& color = {1.0, 1.0, 1.0}, const double& intensity = 1.0);
 std::unique_ptr<Light> MakePointLight(
     const estl::vector::Vector<double, 3> position,
-    const Color& color = {1.0, 1.0, 1.0}, const double& intensity = 1.0);
+    const Color& color = {1.0, 1.0, 1.0}, const double& intensity = -1.0);
 
 }  // namespace ray
 

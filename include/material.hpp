@@ -15,7 +15,7 @@ namespace ray {
 
       std::string name;
       Color ambient, diffuse, specular, emissive; 
-      double specular_exp, optical_denisty, dissolve;
+      double specular_exp, optical_denisty, dissolve, reflectivity;
       int illum;
   };
 

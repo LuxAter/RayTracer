@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+#include <future>
 
 #include <estl/vector.hpp>
 
@@ -11,7 +12,13 @@
 #include "object.hpp"
 
 namespace ray {
-enum RenderStyle { SINGLE_PASS, HORIZONTAL_PASS, VERTICAL_PASS, SCATTER_PASS };
+enum RenderStyle {
+  SINGLE_PASS,
+  HORIZONTAL_PASS,
+  VERTICAL_PASS,
+  SCATTER_PASS,
+  MULTI_THREAD
+};
 
 void Render(const std::vector<std::unique_ptr<Object>>& objs,
             const std::vector<std::unique_ptr<Light>>& lights, unsigned width,
@@ -35,23 +42,35 @@ void RenderScatterPass(const double& scale, const double& aspect,
                        const std::vector<std::unique_ptr<Object>>& objs,
                        const std::vector<std::unique_ptr<Light>>& lights,
                        const unsigned passes);
-void RenderPixel(const double& scale, const double& aspect,
-                 const unsigned& width, const unsigned& height,
-                 const std::vector<std::unique_ptr<Object>>& objs,
-                 const std::vector<std::unique_ptr<Light>>& lights,
-                 const unsigned& row, const unsigned& col);
+void RenderMultiThreadPass(const double& scale, const double& aspect,
+                           const unsigned& width, const unsigned& height,
+                           const std::vector<std::unique_ptr<Object>>& objs,
+                           const std::vector<std::unique_ptr<Light>>& lights,
+                           const unsigned passes);
+std::vector<Color> RenderThread(const double& scale, const double& aspect,
+                  const unsigned& width, const unsigned& height,
+                  const std::vector<std::unique_ptr<Object>>& objs,
+                  const std::vector<std::unique_ptr<Light>>& lights,
+                  const unsigned& start, const unsigned& end);
+
+Color RenderPixel(const double& scale, const double& aspect,
+                  const unsigned& width, const unsigned& height,
+                  const std::vector<std::unique_ptr<Object>>& objs,
+                  const std::vector<std::unique_ptr<Light>>& lights,
+                  const unsigned& row, const unsigned& col);
 
 Color CastRay(const estl::vector::Vector<double, 3>& start,
               const estl::vector::Vector<double, 3>& dir,
               const std::vector<std::unique_ptr<Object>>& objs,
               const std::vector<std::unique_ptr<Light>>& lights,
-              unsigned depth = 0);
+              unsigned depth = 0, const Object* caster = NULL);
 
-Color Diffuse(IntersectData& inter,
-              const estl::vector::Vector<double, 3>& start,
-              const estl::vector::Vector<double, 3>& dir,
+Color Reflect(const estl::vector::Vector<double, 3>& point,
+              const estl::vector::Vector<double, 3>& normal,
+              const estl::vector::Vector<double, 3> dir,
               const std::vector<std::unique_ptr<Object>>& objs,
-              const std::vector<std::unique_ptr<Light>>& lights);
+              const std::vector<std::unique_ptr<Light>>& lights, double depth,
+              const Object* obj);
 
 bool TraceRay(const estl::vector::Vector<double, 3>& start,
               const estl::vector::Vector<double, 3>& dir,
