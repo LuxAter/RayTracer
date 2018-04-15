@@ -10,6 +10,7 @@
 #include "object.hpp"
 #include "light.hpp"
 #include "render.hpp"
+#include "png.hpp"
 
 // using namespace estl::vector;
 
@@ -79,13 +80,18 @@ int main(int argc, char const* argv[]) {
   // lights.push_back(ray::MakePointLight({{0.0, -0.75, 10.0}}, {1.0, 1.0, 1.0}, 20));
   // objs.push_back(ray::GeneratePlane({0, -1, 0}, {0.0, 1.0, 0.0}, mat));
   
-  entis_init("Ray", WIDTH, HEIGHT, 0, NULL);
-  entis_clear();
-  entis_set_color_drgb(1.0, 0.0, 1.0);
+  // entis_init("Ray", WIDTH, HEIGHT, 0, NULL);
+  // entis_clear();
+  // entis_set_color_drgb(1.0, 0.0, 1.0);
   // ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::MULTI_THREAD, 8);
-  ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::SCATTER_PASS, 31);
-  entis_wait_button();
-  entis_term();
+  // ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::SCATTER_PASS, 31);
+  
+  ray::Png png("test.png", 100, 100);
+  png.Fill(0.0, 1.6, 1.0);
+  png.Write();
+
+  // entis_wait_button();
+  // entis_term();
 
   return 0;
 }

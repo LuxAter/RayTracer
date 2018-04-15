@@ -116,8 +116,8 @@ void ray::RenderScatterPass(const double& scale, const double& aspect,
   unsigned pixels = height * width;
   for (unsigned offset = 0; offset < passes; ++offset) {
     for (unsigned k = offset; k < pixels; k += passes) {
-      unsigned i = k % width;
-      unsigned j = (k - i) / width;
+      unsigned j = k % width;
+      unsigned i = (k - j) / width;
       Color color =
           RenderPixel(scale, aspect, width, height, objs, lights, i, j);
       entis_set_color_drgb(color.r, color.g, color.b);

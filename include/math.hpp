@@ -11,6 +11,7 @@
 namespace ray {
 bool Quadradic(double a, double b, double c, double& x0, double& x1);
 double Clamp(double val, double min, double max);
+int Clamp(int val, int min, int max);
 double Rand(double min=0.0, double max=1.0);
 }  // namespace ray
 
