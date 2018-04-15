@@ -12,6 +12,7 @@
 #include "object.hpp"
 
 namespace ray {
+enum RenderFormat { ESTL, PNG, ESTL_PNG };
 enum RenderStyle {
   SINGLE_PASS,
   HORIZONTAL_PASS,
@@ -22,31 +23,34 @@ enum RenderStyle {
 
 void Render(const std::vector<std::unique_ptr<Object>>& objs,
             const std::vector<std::unique_ptr<Light>>& lights, unsigned width,
-            unsigned height, double fov, RenderStyle style = SINGLE_PASS,
-            int passes = 1);
+            unsigned height, double fov, RenderFormat fmt = ESTL,
+            RenderStyle style = SINGLE_PASS, int passes = 1);
 
 void RenderSinglePass(const double& scale, const double& aspect,
                       const unsigned& width, const unsigned& height,
                       const std::vector<std::unique_ptr<Object>>& objs,
-                      const std::vector<std::unique_ptr<Light>>& lights);
+                      const std::vector<std::unique_ptr<Light>>& lights,
+                      RenderFormat fmt);
 void RenderHorizontalPass(const double& scale, const double& aspect,
                           const unsigned& width, const unsigned& height,
                           const std::vector<std::unique_ptr<Object>>& objs,
-                          const std::vector<std::unique_ptr<Light>>& lights);
+                          const std::vector<std::unique_ptr<Light>>& lights,
+                          RenderFormat fmt);
 void RenderVerticalPass(const double& scale, const double& aspect,
                         const unsigned& width, const unsigned& height,
                         const std::vector<std::unique_ptr<Object>>& objs,
-                        const std::vector<std::unique_ptr<Light>>& lights);
+                        const std::vector<std::unique_ptr<Light>>& lights,
+                        RenderFormat fmt);
 void RenderScatterPass(const double& scale, const double& aspect,
                        const unsigned& width, const unsigned& height,
                        const std::vector<std::unique_ptr<Object>>& objs,
                        const std::vector<std::unique_ptr<Light>>& lights,
-                       const unsigned passes);
+                       const unsigned passes, RenderFormat fmt);
 void RenderMultiThreadPass(const double& scale, const double& aspect,
                            const unsigned& width, const unsigned& height,
                            const std::vector<std::unique_ptr<Object>>& objs,
                            const std::vector<std::unique_ptr<Light>>& lights,
-                           const unsigned passes);
+                           const unsigned passes, RenderFormat fmt);
 std::vector<Color> RenderThread(
     const double& scale, const double& aspect, const unsigned& width,
     const unsigned& height, const std::vector<std::unique_ptr<Object>>& objs,

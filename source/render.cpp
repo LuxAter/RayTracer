@@ -12,6 +12,7 @@
 
 #include "light.hpp"
 #include "object.hpp"
+#include "png.hpp"
 
 #include <iostream>
 
@@ -23,33 +24,40 @@ unsigned max_depth = 10;
 double bias = 0.001;
 Vec3d eye, coi, up;
 ray::Color background_color = {0.2, 0.2, 0.3};
+ray::Png image;
 
 void ray::Render(const std::vector<std::unique_ptr<Object>>& objs,
                  const std::vector<std::unique_ptr<Light>>& lights,
-                 unsigned width, unsigned height, double fov, RenderStyle style,
-                 int passes) {
+                 unsigned width, unsigned height, double fov, RenderFormat fmt,
+                 RenderStyle style, int passes) {
   auto start = std::chrono::high_resolution_clock::now();
   double scale = tan(fov / 2.0);
   double aspect = width / static_cast<double>(height);
+  if (fmt == ESTL_PNG || fmt == PNG) {
+    std::cout << "Rendering " << width << "x" << height << " to img.png\n";
+    image = Png("img.png", width, height);
+  }
   switch (style) {
     case SINGLE_PASS: {
-      RenderSinglePass(scale, aspect, width, height, objs, lights);
+      RenderSinglePass(scale, aspect, width, height, objs, lights, fmt);
       break;
     }
     case HORIZONTAL_PASS: {
-      RenderHorizontalPass(scale, aspect, width, height, objs, lights);
+      RenderHorizontalPass(scale, aspect, width, height, objs, lights, fmt);
       break;
     }
     case VERTICAL_PASS: {
-      RenderVerticalPass(scale, aspect, width, height, objs, lights);
+      RenderVerticalPass(scale, aspect, width, height, objs, lights, fmt);
       break;
     }
     case SCATTER_PASS: {
-      RenderScatterPass(scale, aspect, width, height, objs, lights, passes);
+      RenderScatterPass(scale, aspect, width, height, objs, lights, passes,
+                        fmt);
       break;
     }
     case MULTI_THREAD: {
-      RenderMultiThreadPass(scale, aspect, width, height, objs, lights, passes);
+      RenderMultiThreadPass(scale, aspect, width, height, objs, lights, passes,
+                            fmt);
       break;
     }
   }
@@ -64,55 +72,81 @@ void ray::Render(const std::vector<std::unique_ptr<Object>>& objs,
       diff - sec - milli - micro);
   std::cout << sec.count() << "s " << milli.count() << "ms " << micro.count()
             << "μs " << nano.count() << "ns\n";
-  entis_update();
+  if (fmt == ESTL_PNG || fmt == PNG) {
+    image.Write();
+  }
+  if (fmt == ESTL_PNG || fmt == ESTL) {
+    entis_update();
+  }
 }
 
 void ray::RenderSinglePass(const double& scale, const double& aspect,
                            const unsigned& width, const unsigned& height,
                            const std::vector<std::unique_ptr<Object>>& objs,
-                           const std::vector<std::unique_ptr<Light>>& lights) {
+                           const std::vector<std::unique_ptr<Light>>& lights,
+                           RenderFormat fmt) {
   for (unsigned i = 0; i < height; i += 1) {
     for (unsigned j = 0; j < width; j += 1) {
       Color color =
           RenderPixel(scale, aspect, width, height, objs, lights, i, j);
-      entis_set_color_drgb(color.r, color.g, color.b);
-      entis_point(j, i);
+      if (fmt == ESTL || fmt == ESTL_PNG) {
+        entis_set_color_drgb(color.r, color.g, color.b);
+        entis_point(j, i);
+      }
+      if (fmt == PNG || fmt == ESTL_PNG) {
+        image.Plot(j, i, color.r, color.g, color.b);
+      }
     }
   }
 }
 void ray::RenderHorizontalPass(
     const double& scale, const double& aspect, const unsigned& width,
     const unsigned& height, const std::vector<std::unique_ptr<Object>>& objs,
-    const std::vector<std::unique_ptr<Light>>& lights) {
+    const std::vector<std::unique_ptr<Light>>& lights, RenderFormat fmt) {
   for (unsigned i = 0; i < height; ++i) {
     for (unsigned j = 0; j < width; ++j) {
       Color color =
           RenderPixel(scale, aspect, width, height, objs, lights, i, j);
-      entis_set_color_drgb(color.r, color.g, color.b);
-      entis_point(j, i);
+      if (fmt == ESTL || fmt == ESTL_PNG) {
+        entis_set_color_drgb(color.r, color.g, color.b);
+        entis_point(j, i);
+      }
+      if (fmt == PNG || fmt == ESTL_PNG) {
+        image.Plot(j, i, color.r, color.g, color.b);
+      }
     }
-    entis_update();
+    if (fmt == ESTL || fmt == ESTL_PNG) {
+      entis_update();
+    }
   }
 }
-void ray::RenderVerticalPass(
-    const double& scale, const double& aspect, const unsigned& width,
-    const unsigned& height, const std::vector<std::unique_ptr<Object>>& objs,
-    const std::vector<std::unique_ptr<Light>>& lights) {
+void ray::RenderVerticalPass(const double& scale, const double& aspect,
+                             const unsigned& width, const unsigned& height,
+                             const std::vector<std::unique_ptr<Object>>& objs,
+                             const std::vector<std::unique_ptr<Light>>& lights,
+                             RenderFormat fmt) {
   for (unsigned j = 0; j < width; ++j) {
     for (unsigned i = 0; i < height; ++i) {
       Color color =
           RenderPixel(scale, aspect, width, height, objs, lights, i, j);
-      entis_set_color_drgb(color.r, color.g, color.b);
-      entis_point(j, i);
+      if (fmt == ESTL || fmt == ESTL_PNG) {
+        entis_set_color_drgb(color.r, color.g, color.b);
+        entis_point(j, i);
+      }
+      if (fmt == PNG || fmt == ESTL_PNG) {
+        image.Plot(j, i, color.r, color.g, color.b);
+      }
     }
-    entis_update();
+    if (fmt == ESTL || fmt == ESTL_PNG) {
+      entis_update();
+    }
   }
 }
 void ray::RenderScatterPass(const double& scale, const double& aspect,
                             const unsigned& width, const unsigned& height,
                             const std::vector<std::unique_ptr<Object>>& objs,
                             const std::vector<std::unique_ptr<Light>>& lights,
-                            const unsigned passes) {
+                            const unsigned passes, RenderFormat fmt) {
   unsigned pixels = height * width;
   for (unsigned offset = 0; offset < passes; ++offset) {
     for (unsigned k = offset; k < pixels; k += passes) {
@@ -120,17 +154,25 @@ void ray::RenderScatterPass(const double& scale, const double& aspect,
       unsigned i = (k - j) / width;
       Color color =
           RenderPixel(scale, aspect, width, height, objs, lights, i, j);
-      entis_set_color_drgb(color.r, color.g, color.b);
-      entis_point(j, i);
+      if (fmt == ESTL || fmt == ESTL_PNG) {
+        entis_set_color_drgb(color.r, color.g, color.b);
+        entis_point(j, i);
+      }
+      if (fmt == PNG || fmt == ESTL_PNG) {
+        image.Plot(j, i, color.r, color.g, color.b);
+      }
     }
-    entis_update();
+    if (fmt == ESTL || fmt == ESTL_PNG) {
+      entis_update();
+    }
   }
 }
 
 void ray::RenderMultiThreadPass(
     const double& scale, const double& aspect, const unsigned& width,
     const unsigned& height, const std::vector<std::unique_ptr<Object>>& objs,
-    const std::vector<std::unique_ptr<Light>>& lights, const unsigned passes) {
+    const std::vector<std::unique_ptr<Light>>& lights, const unsigned passes,
+    RenderFormat fmt) {
   // std::vector<std::thread> threads;
   std::vector<std::future<std::vector<Color>>> threads;
   double ppt = height / passes;
@@ -147,8 +189,13 @@ void ray::RenderMultiThreadPass(
   for (unsigned i = ppt * (passes - 1); i < height; ++i) {
     for (unsigned j = 0; j < width; ++j) {
       Color color = colors[pos];
-      entis_set_color_drgb(color.r, color.g, color.b);
-      entis_point(j, i);
+      if (fmt == ESTL || fmt == ESTL_PNG) {
+        entis_set_color_drgb(color.r, color.g, color.b);
+        entis_point(j, i);
+      }
+      if (fmt == PNG || fmt == ESTL_PNG) {
+        image.Plot(j, i, color.r, color.g, color.b);
+      }
       pos++;
     }
   }
@@ -158,8 +205,13 @@ void ray::RenderMultiThreadPass(
     for (unsigned i = ppt * id; i < ppt * (id + 1); ++i) {
       for (unsigned j = 0; j < width; ++j) {
         Color color = colors[pos];
-        entis_set_color_drgb(color.r, color.g, color.b);
-        entis_point(j, i);
+        if (fmt == ESTL || fmt == ESTL_PNG) {
+          entis_set_color_drgb(color.r, color.g, color.b);
+          entis_point(j, i);
+        }
+        if (fmt == PNG || fmt == ESTL_PNG) {
+          image.Plot(j, i, color.r, color.g, color.b);
+        }
         pos++;
       }
     }

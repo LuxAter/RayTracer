@@ -11,7 +11,10 @@ class Png {
  public:
   Png();
   Png(std::string filename, unsigned width, unsigned height);
+  Png(const Png& copy);
   ~Png();
+
+  Png& operator=(const Png& copy);
 
   void Plot(unsigned x, unsigned y, int r, int g, int b);
   void Plot(unsigned x, unsigned y, double r, double g, double b);

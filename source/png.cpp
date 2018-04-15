@@ -18,6 +18,16 @@ ray::Png::Png(std::string filename, unsigned width, unsigned height) {
   }
 }
 
+ray::Png::Png(const Png& copy) {
+  width_ = copy.width_;
+  height_ = copy.height_;
+  file_name_ = copy.file_name_;
+  pixel_data_ = (png_bytepp)malloc(height_ * sizeof(png_bytep));
+  for (unsigned i = 0; i < height_; i++) {
+    pixel_data_[i] = (png_bytep)malloc(6 * width_ * sizeof(png_byte));
+  }
+}
+
 ray::Png::~Png() {
   for (unsigned i = 0; i < height_; ++i) {
     free(pixel_data_[i]);
@@ -25,19 +35,31 @@ ray::Png::~Png() {
   free(pixel_data_);
 }
 
+ray::Png& ray::Png::operator=(const Png& copy){
+  width_ = copy.width_;
+  height_ = copy.height_;
+  file_name_ = copy.file_name_;
+  pixel_data_ = (png_bytepp)malloc(height_ * sizeof(png_bytep));
+  for (unsigned i = 0; i < height_; i++) {
+    pixel_data_[i] = (png_bytep)malloc(6 * width_ * sizeof(png_byte));
+  }
+  return *this;
+}
+
 void ray::Png::Plot(unsigned x, unsigned y, int r, int g, int b) {
   r = Clamp(r, 0, 65535);
   g = Clamp(g, 0, 65535);
   b = Clamp(b, 0, 65535);
-  if (y <= height_ && x <= width_) {
+  if (y < height_ && x < width_) {
     unsigned index = 6 * x;
-    pixel_data_[height_ - y - 1][index] = 0;
-    pixel_data_[height_ - y - 1][index] = (char)std::floor(((double)r) / 256.0);
-    pixel_data_[height_ - y - 1][index + 1] = (char)(r % 256);
-    pixel_data_[height_ - y - 1][index + 2] = (char)std::floor(((double)g) / 256.0);
-    pixel_data_[height_ - y - 1][index + 3] = (char)(g % 256);
-    pixel_data_[height_ - y - 1][index + 4] = (char)std::floor(((double)b) / 256.0);
-    pixel_data_[height_ - y - 1][index + 5] = (char)(b % 256);
+    pixel_data_[y][index] = (char)std::floor(((double)r) / 256.0);
+    pixel_data_[y][index + 1] = (char)(r % 256);
+    pixel_data_[y][index + 2] =
+        (char)std::floor(((double)g) / 256.0);
+    pixel_data_[y][index + 3] = (char)(g % 256);
+    pixel_data_[y][index + 4] =
+        (char)std::floor(((double)b) / 256.0);
+    pixel_data_[y][index + 5] = (char)(b % 256);
   }
 }
 void ray::Png::Plot(unsigned x, unsigned y, double r, double g, double b) {

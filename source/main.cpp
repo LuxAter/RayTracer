@@ -2,8 +2,8 @@
 
 #include <entis/entis.h>
 
-#define WIDTH 800
-#define HEIGHT 800
+#define WIDTH 3840
+#define HEIGHT 2160
 #define RES 1
 
 #include "material.hpp"
@@ -63,7 +63,9 @@ int main(int argc, char const* argv[]) {
   std::vector<std::unique_ptr<ray::Light>> lights;
   // COOL
   // lights.push_back(ray::MakePointLight({0.0, 5.0, 10.0}, {1.0, 1.0, 1.0}));
-  lights.push_back(ray::MakeAreaLight({0.0, 5.0, 10.0}, {0.0, -1.0, 0.0}, 1.0, 1.0, 4, {1.0, 1.0, 1.0}));
+  lights.push_back(ray::MakeAreaLight({-5.0, 5.0, 10.0}, {0.0, -1.0, 0.0}, 1.0, 1.0, 8, {1.0, 0.0, 0.0}));
+  lights.push_back(ray::MakeAreaLight({0.0, 5.0, 10.0}, {0.0, -1.0, 0.0}, 1.0, 1.0, 8, {0.0, 1.0, 0.0}));
+  lights.push_back(ray::MakeAreaLight({5.0, 5.0, 10.0}, {0.0, -1.0, 0.0}, 1.0, 1.0, 8, {0.0, 0.0, 1.0}));
   // lights.push_back(ray::MakePointLight({-20.0, 5.0, 9.0}, {0.0, 0.0, 1.0}));
   // lights.push_back(ray::MakePointLight({0.0, 10.0, 14.0}, {0.0, 1.0, 0.0}));
   // lights.push_back(ray::MakePointLight({{5.0, 3.0, 5.0}}, {1.0, 1.0, 1.0}));
@@ -84,11 +86,11 @@ int main(int argc, char const* argv[]) {
   // entis_clear();
   // entis_set_color_drgb(1.0, 0.0, 1.0);
   // ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::MULTI_THREAD, 8);
-  // ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::SCATTER_PASS, 31);
+  ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::PNG, ray::MULTI_THREAD, 8);
   
-  ray::Png png("test.png", 100, 100);
-  png.Fill(0.0, 1.6, 1.0);
-  png.Write();
+  // ray::Png png("test.png", 100, 100);
+  // png.Fill(0.0, 1.6, 1.0);
+  // png.Write();
 
   // entis_wait_button();
   // entis_term();
