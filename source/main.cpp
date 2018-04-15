@@ -34,13 +34,13 @@ int main(int argc, char const* argv[]) {
   refl.diffuse = {1.0, 1.0, 1.0};
   refl.specular = {1.0, 1.0, 1.0};
   refl.specular_exp = 76.8;
-  refl.reflectivity = 1.0;
+  refl.reflectivity = 0.75;
   // Mat========
   mat.ambient = {1.0, 1.0, 1.0};
   mat.diffuse = {1.0, 1.0, 1.0};
-  mat.specular = {0.0, 0.0, 0.0};
+  mat.specular = {1.0, 1.0, 1.0};
   mat.specular_exp = 76.8;
-  mat.reflectivity = 0.5;
+  mat.reflectivity = 0.0;
 
   mis.emissive = {0.0, 0.0, 0.0};
   mis.optical_denisty = 1.0;
@@ -61,20 +61,20 @@ int main(int argc, char const* argv[]) {
   std::vector<std::unique_ptr<ray::Object>> objs;
   std::vector<std::unique_ptr<ray::Light>> lights;
   // COOL
-  lights.push_back(ray::MakePointLight({{20.0, 5.0, 9.0}}, {1.0, 0.0, 0.0}));
-  lights.push_back(ray::MakePointLight({{-20.0, 5.0, 9.0}}, {0.0, 0.0, 1.0}));
-  lights.push_back(ray::MakePointLight({{0.0, 10.0, 14.0}}, {0.0, 1.0, 0.0}));
+  // lights.push_back(ray::MakePointLight({0.0, 5.0, 10.0}, {1.0, 1.0, 1.0}));
+  lights.push_back(ray::MakeAreaLight({0.0, 5.0, 10.0}, {0.0, -1.0, 0.0}, 1.0, 1.0, 4, {1.0, 1.0, 1.0}));
+  // lights.push_back(ray::MakePointLight({-20.0, 5.0, 9.0}, {0.0, 0.0, 1.0}));
+  // lights.push_back(ray::MakePointLight({0.0, 10.0, 14.0}, {0.0, 1.0, 0.0}));
   // lights.push_back(ray::MakePointLight({{5.0, 3.0, 5.0}}, {1.0, 1.0, 1.0}));
-  objs.push_back(ray::GeneratePlane({0, -1, 0}, {0.0, 1.0, 0.0}, mat));
-  objs.push_back(ray::GeneratePlane({0, 0, 15}, {0.0, 0.0, -1.0}, mat));
-  // objs.push_back(ray::GeneratePlane({0, 0, -5}, {0.0, 0.0, 1.0}, mat));
-  objs.push_back(ray::GenerateSphere(1, mis));
-  objs.back()->Translate(1, 2, 8.5);
-  objs.push_back(ray::GenerateSphere(1, mis));
-  objs.back()->Translate(-1, 0, 10);
+  objs.push_back(ray::GeneratePlane({0, -2, 0}, {0.0, 1.0, 0.0}, mis));
+  objs.push_back(ray::GeneratePlane({0, 0, 15}, {0.0, 0.0, -1.0}, mis));
+  objs.push_back(ray::GenerateSphere(1, mat));
+  objs.back()->Translate(3, 0, 10);
+  objs.push_back(ray::GenerateSphere(1, mat));
+  objs.back()->Translate(-3, 0, 10);
+  objs.push_back(ray::GenerateSphere(1, refl));
+  objs.back()->Translate(0, 0, 10);
 
-  // objs.push_back(ray::GenerateSphere(50, refl));
-  // objs.back()->Translate(0, 0, 70);
   // FALLOFF
   // lights.push_back(ray::MakePointLight({{0.0, -0.75, 10.0}}, {1.0, 1.0, 1.0}, 20));
   // objs.push_back(ray::GeneratePlane({0, -1, 0}, {0.0, 1.0, 0.0}, mat));
@@ -82,10 +82,8 @@ int main(int argc, char const* argv[]) {
   entis_init("Ray", WIDTH, HEIGHT, 0, NULL);
   entis_clear();
   entis_set_color_drgb(1.0, 0.0, 1.0);
-  // ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::VERTICAL_PASS, 1);
-  // ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::SCATTER_PASS, 8);
-  ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::MULTI_THREAD, 8);
-  // entis_wait_event_type(ENTIS_KEY_RELEAS);
+  // ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::MULTI_THREAD, 8);
+  ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::SCATTER_PASS, 31);
   entis_wait_button();
   entis_term();
 

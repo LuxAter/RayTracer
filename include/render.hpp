@@ -1,11 +1,11 @@
 #ifndef RAY_RENDER_HPP_
 #define RAY_RENDER_HPP_
 
+#include <future>
 #include <memory>
 #include <vector>
-#include <future>
 
-#include <estl/vector.hpp>
+#include <estl/basic/vector.hpp>
 
 #include "color.hpp"
 #include "light.hpp"
@@ -47,11 +47,11 @@ void RenderMultiThreadPass(const double& scale, const double& aspect,
                            const std::vector<std::unique_ptr<Object>>& objs,
                            const std::vector<std::unique_ptr<Light>>& lights,
                            const unsigned passes);
-std::vector<Color> RenderThread(const double& scale, const double& aspect,
-                  const unsigned& width, const unsigned& height,
-                  const std::vector<std::unique_ptr<Object>>& objs,
-                  const std::vector<std::unique_ptr<Light>>& lights,
-                  const unsigned& start, const unsigned& end);
+std::vector<Color> RenderThread(
+    const double& scale, const double& aspect, const unsigned& width,
+    const unsigned& height, const std::vector<std::unique_ptr<Object>>& objs,
+    const std::vector<std::unique_ptr<Light>>& lights, const unsigned& start,
+    const unsigned& end);
 
 Color RenderPixel(const double& scale, const double& aspect,
                   const unsigned& width, const unsigned& height,
@@ -59,23 +59,25 @@ Color RenderPixel(const double& scale, const double& aspect,
                   const std::vector<std::unique_ptr<Light>>& lights,
                   const unsigned& row, const unsigned& col);
 
-Color CastRay(const estl::vector::Vector<double, 3>& start,
-              const estl::vector::Vector<double, 3>& dir,
+Color CastRay(const estl::base::Vec3d& start, const estl::base::Vec3d& dir,
               const std::vector<std::unique_ptr<Object>>& objs,
               const std::vector<std::unique_ptr<Light>>& lights,
               unsigned depth = 0, const Object* caster = NULL);
 
-Color Reflect(const estl::vector::Vector<double, 3>& point,
-              const estl::vector::Vector<double, 3>& normal,
-              const estl::vector::Vector<double, 3> dir,
+Color Reflect(const estl::base::Vec3d& point, const estl::base::Vec3d& normal,
+              const estl::base::Vec3d dir,
               const std::vector<std::unique_ptr<Object>>& objs,
               const std::vector<std::unique_ptr<Light>>& lights, double depth,
               const Object* obj);
 
-bool TraceRay(const estl::vector::Vector<double, 3>& start,
-              const estl::vector::Vector<double, 3>& dir,
+bool TraceRay(const estl::base::Vec3d& start, const estl::base::Vec3d& dir,
               const std::vector<std::unique_ptr<Object>>& objs,
               IntersectData& inter, bool base_ray = true);
+double ShadowRay(const std::unique_ptr<Light>& light,
+                 const IntersectData& inter,
+                 const std::vector<std::unique_ptr<Object>>& objs,
+                 estl::base::Vec3d& light_dir,
+                 estl::base::Vec3d& light_intensity);
 }  // namespace ray
 
 #endif  // RAY_RENDER_HPP_

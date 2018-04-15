@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include <estl/vector.hpp>
+#include <estl/basic/vector.hpp>
 
 namespace ray {
   class Color{
@@ -11,11 +11,11 @@ namespace ray {
       Color();
       Color(int red, int green, int blue);
       Color(double red, double green, double blue);
-      explicit Color(estl::vector::Vector<double, 3> vec);
+      explicit Color(estl::base::Vec3d vec);
 
       void Clamp();
 
-      estl::vector::Vector<double, 3> Vector();
+      estl::base::Vec3d Vector();
 
       Color& operator+=(const Color& rhs);
 

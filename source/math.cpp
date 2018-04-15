@@ -24,3 +24,7 @@ bool ray::Quadradic(double a, double b, double c, double& x0, double& x1) {
 double ray::Clamp(double val, double min, double max){
   return std::max(min, std::min(val, max));
 }
+
+double ray::Rand(double min, double max){
+  return min + (double)rand() / RAND_MAX * (max - min);
+}

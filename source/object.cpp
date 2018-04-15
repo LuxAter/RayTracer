@@ -10,14 +10,14 @@
 #include <string>
 #include <vector>
 
-#include <estl/vector.hpp>
+#include <estl/basic/vector.hpp>
 
 #include "material.hpp"
 #include "math.hpp"
 
 #include <iostream>
 
-using namespace estl::vector;
+using namespace estl::base;
 
 std::vector<std::string> split(const std::string& s, char delim) {
   std::stringstream ss(s);
@@ -30,29 +30,29 @@ std::vector<std::string> split(const std::string& s, char delim) {
 }
 
 ray::Object::Object() {
-  mat_.fill_diagonal(1);
-  mat_inv_.fill_diagonal(1);
+  mat_.Diagonal(1);
+  mat_inv_.Diagonal(1);
 }
 
 ray::Object::~Object() {}
 
-bool ray::Object::Intersect(const estl::vector::Vector<double, 3>& start,
-                            const estl::vector::Vector<double, 3>& dir,
+bool ray::Object::Intersect(const estl::base::Vec3d& start,
+                            const estl::base::Vec3d& dir,
                             IntersectData& inter) {
   return false;
 }
 
 void ray::Object::Translate(double x, double y, double z) {
-  estl::matrix::Matrix<double, 4, 4> trans;
-  trans.fill_diagonal(1);
+  estl::base::Mat4d trans;
+  trans.Diagonal(1);
   trans(0, 3) = x;
   trans(1, 3) = y;
   trans(2, 3) = z;
-  mat_ = trans * mat_;
+  mat_ = Dot(trans, mat_);
   trans(0, 3) = -x;
   trans(1, 3) = -y;
   trans(2, 3) = -z;
-  mat_inv_ = mat_inv_ * trans;
+  mat_inv_ = Dot(mat_inv_, trans);
 }
 
 ray::Sphere::Sphere(const double& radius, Material mat)
@@ -63,14 +63,14 @@ ray::Sphere::Sphere(const double& radius, Material mat)
   this->name = "sphere";
 }
 
-bool ray::Sphere::Intersect(const estl::vector::Vector<double, 3>& start,
-                            const estl::vector::Vector<double, 3>& dir,
+bool ray::Sphere::Intersect(const estl::base::Vec3d& start,
+                            const estl::base::Vec3d& dir,
                             IntersectData& inter) {
-  Vector<double, 3> local_start(mat_inv_ * Vector<double, 4>(start, 1), 0);
+  Vec3d local_start = Dot(mat_inv_, start);
   double t0, t1;
-  double a = dot(dir, dir);
-  double b = 2 * dot(dir, local_start);
-  double c = dot(local_start, local_start) - radius_square_;
+  double a = Dot(dir, dir);
+  double b = 2 * Dot(dir, local_start);
+  double c = Dot(local_start, local_start) - radius_square_;
   if (Quadradic(a, b, c, t0, t1) == false) {
     return false;
   }
@@ -87,26 +87,26 @@ bool ray::Sphere::Intersect(const estl::vector::Vector<double, 3>& start,
   }
   inter.mat = material_;
   inter.point = start + (dir * inter.t_near);
-  inter.normal = normalize(local_start + (dir * inter.t_near));
+  inter.normal = Normalize(local_start + (dir * inter.t_near));
   return true;
 }
 
-ray::Plane::Plane(const estl::vector::Vector<double, 3>& origin,
-                  const estl::vector::Vector<double, 3>& normal, Material mat)
+ray::Plane::Plane(const estl::base::Vec3d& origin,
+                  const estl::base::Vec3d& normal, Material mat)
     : Object(),
       material_(mat),
-      constant_(-dot(origin, normal)),
+      constant_(-Dot(origin, normal)),
       origin_(origin),
-      normal_(normalize(normal)) {
+      normal_(Normalize(normal)) {
   this->name = "plane";
 }
-bool ray::Plane::Intersect(const estl::vector::Vector<double, 3>& start,
-                           const estl::vector::Vector<double, 3>& dir,
+bool ray::Plane::Intersect(const estl::base::Vec3d& start,
+                           const estl::base::Vec3d& dir,
                            IntersectData& inter) {
-  Vector<double, 3> local_start(mat_inv_ * Vector<double, 4>(start, 1), 0);
-  double a = dot(normal_, dir);
+  Vec3d local_start = Dot(mat_inv_ , start);
+  double a = Dot(normal_, dir);
   // if (a != 0) {
-  //   double t = -(dot(normal_, local_start) + constant_) / a;
+  //   double t = -(Dot(normal_, local_start) + constant_) / a;
   //   if (t > 0 && t < inter.t_near) {
   //     inter.t_near = t;
   //     inter.mat = material_;
@@ -116,7 +116,7 @@ bool ray::Plane::Intersect(const estl::vector::Vector<double, 3>& start,
   //   }
   // }
   // return false;
-  double b = constant_ - dot(normal_, local_start);
+  double b = constant_ - Dot(normal_, local_start);
   if (a == 0) {
     return false;
   } else if (b / a < 0) {
@@ -129,24 +129,24 @@ bool ray::Plane::Intersect(const estl::vector::Vector<double, 3>& start,
   return true;
 }
 
-ray::Circle::Circle(const estl::vector::Vector<double, 3>& origin,
-                    const estl::vector::Vector<double, 3>& normal,
+ray::Circle::Circle(const estl::base::Vec3d& origin,
+                    const estl::base::Vec3d& normal,
                     const double& radius, Material mat)
     : Object(),
       material_(mat),
-      constant_(-dot(origin, normal)),
+      constant_(-Dot(origin, normal)),
       radius_(radius),
       origin_(origin),
-      normal_(normalize(normal)) {
+      normal_(Normalize(normal)) {
   this->name = "plane";
 }
-bool ray::Circle::Intersect(const estl::vector::Vector<double, 3>& start,
-                            const estl::vector::Vector<double, 3>& dir,
+bool ray::Circle::Intersect(const estl::base::Vec3d& start,
+                            const estl::base::Vec3d& dir,
                             IntersectData& inter) {
-  Vector<double, 3> local_start(mat_inv_ * Vector<double, 4>(start, 1), 0),
+  Vec3d local_start = Dot(mat_inv_, start),
       dist;
-  double a = dot(normal_, dir);
-  double b = dot(normal_, local_start) - constant_;
+  double a = Dot(normal_, dir);
+  double b = Dot(normal_, local_start) - constant_;
   if (a == 0) {
     return false;
   } else if (b / a < 0) {
@@ -157,7 +157,7 @@ bool ray::Circle::Intersect(const estl::vector::Vector<double, 3>& start,
   inter.point = start + (dir * inter.t_near);
   inter.normal = normal_;
   dist = inter.point - origin_;
-  if (length(dist) > radius_) {
+  if (Length(dist) > radius_) {
     return false;
   }
   return true;
@@ -167,21 +167,21 @@ std::unique_ptr<ray::Object> ray::GenerateSphere(double radius, Material mat) {
   return std::unique_ptr<Object>(new Sphere(radius, mat));
 }
 std::unique_ptr<ray::Object> ray::GeneratePlane(
-    estl::vector::Vector<double, 3> origin,
-    estl::vector::Vector<double, 3> normal, Material mat) {
-  return std::unique_ptr<Object>(new Plane(origin * -1, normal, mat));
+    estl::base::Vec3d origin,
+    estl::base::Vec3d normal, Material mat) {
+  return std::unique_ptr<Object>(new Plane(origin * -1.0, normal, mat));
 }
 std::unique_ptr<ray::Object> ray::GenerateCircle(
-    estl::vector::Vector<double, 3> origin,
-    estl::vector::Vector<double, 3> normal, double radius, Material mat) {
+    estl::base::Vec3d origin,
+    estl::base::Vec3d normal, double radius, Material mat) {
   return std::unique_ptr<Object>(new Circle(origin, normal, radius, mat));
 }
 
-// bool ray::Object::IntersectPlane(const estl::vector::Vector<double, 3>&
+// bool ray::Object::IntersectPlane(const estl::base::Vec3d&
 // start,
-//     const estl::vector::Vector<double, 3>& dir, double& t){
-//   double a = dot(center, dir);
-//   double b = dot(center, start) - plane_const;
+//     const estl::base::Vec3d& dir, double& t){
+//   double a = Dot(center, dir);
+//   double b = Dot(center, start) - plane_const;
 //   if(a == 0){
 //     return false;
 //   }else if(b / a < 0){
@@ -293,16 +293,16 @@ std::unique_ptr<ray::Object> ray::GenerateCircle(
 // }
 //
 // void ray::Object::CalculateNormals() {
-//   std::vector<std::pair<int, Vector<double, 3>>> norms(vertices.size());
+//   std::vector<std::pair<int, Vec3d>> norms(vertices.size());
 //   for (auto& mat : faces) {
 //     for (auto& it : mat.second) {
-//       Vector<double, 3> a({vertices[(3 * it[0][0])],
+//       Vec3d a({vertices[(3 * it[0][0])],
 //                            vertices[(3 * it[0][0]) + 1],
 //                            vertices[(3 * it[0][0]) + 2]});
-//       Vector<double, 3> b({vertices[(3 * it[0][1])],
+//       Vec3d b({vertices[(3 * it[0][1])],
 //                            vertices[(3 * it[0][1]) + 1],
 //                            vertices[(3 * it[0][1]) + 2]});
-//       Vector<double, 3> c({vertices[(3 * it[0][1])],
+//       Vec3d c({vertices[(3 * it[0][1])],
 //                            vertices[(3 * it[0][1]) + 1],
 //                            vertices[(3 * it[0][1]) + 2]});
 //       norms[it[0][0]].first++;
@@ -354,7 +354,7 @@ std::unique_ptr<ray::Object> ray::GenerateCircle(
 // }
 //
 // void ray::Object::Translate(double x, double y, double z) {
-//   estl::matrix::Matrix<double, 4, 4> trans;
+//   estl::base::Mat4d trans;
 //   trans.fill_diagonal(1);
 //   trans(0, 3) = x;
 //   trans(1, 3) = y;
@@ -366,14 +366,14 @@ std::unique_ptr<ray::Object> ray::GenerateCircle(
 //   mat_inv = mat_inv * trans;
 // }
 //
-// bool ray::Object::IntersectSphere(const estl::vector::Vector<double, 3>&
+// bool ray::Object::IntersectSphere(const estl::base::Vec3d&
 // start,
-//                                   const estl::vector::Vector<double, 3>& dir,
+//                                   const estl::base::Vec3d& dir,
 //                                   double& t) {
 //   double t0, t1;
-//   double a = dot(dir, dir);
-//   double b = 2 * dot(dir, start);
-//   double c = dot(start, start) -
+//   double a = Dot(dir, dir);
+//   double b = 2 * Dot(dir, start);
+//   double c = Dot(start, start) -
 //              std::max(value_max[0], std::max(value_max[1], value_max[2]));
 //   if (Quadradic(a, b, c, t0, t1) == false) {
 //     return false;
@@ -392,11 +392,11 @@ std::unique_ptr<ray::Object> ray::GenerateCircle(
 //   return true;
 // }
 //
-// bool ray::Object::IntersectPlane(const estl::vector::Vector<double, 3>&
+// bool ray::Object::IntersectPlane(const estl::base::Vec3d&
 // start,
-//     const estl::vector::Vector<double, 3>& dir, double& t){
-//   double a = dot(center, dir);
-//   double b = dot(center, start) - plane_const;
+//     const estl::base::Vec3d& dir, double& t){
+//   double a = Dot(center, dir);
+//   double b = Dot(center, start) - plane_const;
 //   if(a == 0){
 //     return false;
 //   }else if(b / a < 0){
@@ -406,10 +406,10 @@ std::unique_ptr<ray::Object> ray::GenerateCircle(
 //   return true;
 // }
 //
-// bool ray::Object::Intersect(const estl::vector::Vector<double, 3>& start,
-//                             const estl::vector::Vector<double, 3>& dir,
+// bool ray::Object::Intersect(const estl::base::Vec3d& start,
+//                             const estl::base::Vec3d& dir,
 //                             ray::Intersect& inter) {
-//   Vector<double, 3> local_start(mat_inv * Vector<double, 4>(start, 1), 0);
+//   Vec3d local_start(mat_inv * Vector<double, 4>(start, 1), 0);
 //   if ((type == SPHERE || type == MESH) &&
 //       IntersectSphere(local_start, dir, inter.t_near) == true) {
 //     if (type == SPHERE) {
@@ -430,8 +430,8 @@ std::unique_ptr<ray::Object> ray::GenerateCircle(
 //   }
 // }
 //
-// bool ray::Object::IntersectPolygon(estl::vector::Vector<double, 3> start,
-//                                    estl::vector::Vector<double, 3> vec,
+// bool ray::Object::IntersectPolygon(estl::base::Vec3d start,
+//                                    estl::base::Vec3d vec,
 //                                    double& t, Material& mat) {
 //   return false;
 // }
@@ -481,10 +481,10 @@ std::unique_ptr<ray::Object> ray::GenerateCircle(
 // }
 //
 // std::unique_ptr<ray::Object> ray::GeneratePlane(
-//     estl::vector::Vector<double, 3> center,
-//     estl::vector::Vector<double, 3> normal, Material mat) {
+//     estl::base::Vec3d center,
+//     estl::base::Vec3d normal, Material mat) {
 //   std::unique_ptr<Object> obj = std::make_unique<ray::Object>(Object());
-//   obj->plane_const = -dot(center, normal);
+//   obj->plane_const = -Dot(center, normal);
 //   obj->center = normal;
 //   obj->type = Object::PLANE;
 //   obj->global_mat = mat;

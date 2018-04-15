@@ -1,13 +1,14 @@
 #include "render.hpp"
 
 #include <entis/entis.h>
+#include <math.h>
 
 #include <chrono>
 #include <memory>
 #include <thread>
 #include <vector>
 
-#include <estl/vector.hpp>
+#include <estl/basic/vector.hpp>
 
 #include "light.hpp"
 #include "object.hpp"
@@ -16,14 +17,11 @@
 
 #define SINGLEPASS
 
-using namespace estl::vector;
+using namespace estl::base;
 
-typedef estl::vector::Vector<double, 3> Vec3;
-typedef estl::vector::Vector<double, 4> Vec4;
-
-unsigned max_depth = 5;
+unsigned max_depth = 10;
 double bias = 0.001;
-Vector<double, 3> eye, coi, up;
+Vec3d eye, coi, up;
 ray::Color background_color = {0.2, 0.2, 0.3};
 
 void ray::Render(const std::vector<std::unique_ptr<Object>>& objs,
@@ -141,8 +139,7 @@ void ray::RenderMultiThreadPass(
     threads.push_back(
         std::async(std::launch::async, RenderThread, std::ref(scale),
                    std::ref(aspect), std::ref(width), std::ref(height),
-                   std::ref(objs), std::ref(lights), ppt * id, ppt * (id +
-                   1)));
+                   std::ref(objs), std::ref(lights), ppt * id, ppt * (id + 1)));
   }
   std::vector<Color> colors = RenderThread(scale, aspect, width, height, objs,
                                            lights, ppt * (passes - 1), height);
@@ -210,15 +207,15 @@ ray::Color ray::RenderPixel(const double& scale, const double& aspect,
   double x =
       (2.0 * (col + 0.5) / static_cast<double>(width) - 1.0) * aspect * scale;
   double y = (1.0 - 2.0 * (row + 0.5) / static_cast<double>(height)) * scale;
-  Vector<double, 3> dir({x, y, 1});
-  dir = normalize(dir);
+  Vec3d dir(x, y, 1);
+  dir = Normalize(dir);
   Color color = CastRay({0, 0, 0}, dir, objs, lights);
   color.Clamp();
   return color;
 }
 
-ray::Color ray::CastRay(const estl::vector::Vector<double, 3>& start,
-                        const estl::vector::Vector<double, 3>& dir,
+ray::Color ray::CastRay(const estl::base::Vec3d& start,
+                        const estl::base::Vec3d& dir,
                         const std::vector<std::unique_ptr<Object>>& objs,
                         const std::vector<std::unique_ptr<Light>>& lights,
                         unsigned depth, const Object* caster) {
@@ -229,32 +226,26 @@ ray::Color ray::CastRay(const estl::vector::Vector<double, 3>& start,
   if (TraceRay(start, dir, objs, inter) == true && inter.obj != caster) {
     Color color;
     for (auto& it : lights) {
-      Vector<double, 3> light_dir, light_intensity, reflection;
-      IntersectData isec;
-      it->Illuminate(inter.point, light_dir, light_intensity, isec.t_near);
-      bool vis = !TraceRay(inter.point + (light_dir * -bias), light_dir * -1,
-                           objs, isec, false);
-      if (isec.obj == inter.obj) {
-        vis = true;
-      }
-      if (dot(inter.normal, light_dir) < 0 && dot(inter.normal, dir) < 0) {
+      Vec3d light_dir, light_intensity, reflection;
+      double vis = ShadowRay(it, inter, objs, light_dir, light_intensity);
+      if (Dot(inter.normal, light_dir) < 0 && Dot(inter.normal, dir) < 0) {
         inter.normal *= -1.0;
       }
       reflection =
-          light_dir - (2 * dot(inter.normal, light_dir) * inter.normal);
+          light_dir - (inter.normal * 2.0 * Dot(inter.normal, light_dir));
       double ambient = 0.2;
-      double diffuse = 0.5 * vis * std::max(0.0, dot(inter.normal, light_dir));
+      double diffuse = 0.5 * vis * std::max(0.0, Dot(inter.normal, light_dir));
       double specular =
           0.3 * vis *
-          pow(std::max(0.0, dot(normalize(start - inter.point), reflection)),
+          pow(std::max(0.0, Dot(Normalize(start - inter.point), reflection)),
               inter.mat.specular_exp);
-      if (dot(dir, inter.normal) * dot(light_dir, inter.normal) < 0) {
+      if (Dot(dir, inter.normal) * Dot(light_dir, inter.normal) < 0) {
         diffuse = 0;
       }
       color +=
-          Color((ambient * (inter.mat.ambient.Vector() * light_intensity)) +
-                (diffuse * (inter.mat.diffuse.Vector() * light_intensity)) +
-                (specular * (inter.mat.specular.Vector() * light_intensity)));
+          Color(((inter.mat.ambient.Vector() * light_intensity) * ambient) +
+                ((inter.mat.diffuse.Vector() * light_intensity) * diffuse) +
+                ((inter.mat.specular.Vector() * light_intensity) * specular));
     }
     if (inter.mat.reflectivity != 0.0) {
       color = Combine(color, 1.0 - inter.mat.reflectivity,
@@ -267,20 +258,18 @@ ray::Color ray::CastRay(const estl::vector::Vector<double, 3>& start,
   return background_color;
 }
 
-ray::Color ray::Reflect(const estl::vector::Vector<double, 3>& point,
-                        const estl::vector::Vector<double, 3>& normal,
-                        const estl::vector::Vector<double, 3> dir,
+ray::Color ray::Reflect(const estl::base::Vec3d& point,
+                        const estl::base::Vec3d& normal,
+                        const estl::base::Vec3d dir,
                         const std::vector<std::unique_ptr<Object>>& objs,
                         const std::vector<std::unique_ptr<Light>>& lights,
                         double depth, const Object* obj) {
-  estl::vector::Vector<double, 3> reflection =
-      dir - (2 * dot(normal, dir) * normal);
+  estl::base::Vec3d reflection = dir - (normal * 2.0 * Dot(normal, dir));
   return CastRay(point + (reflection * bias), reflection, objs, lights,
                  depth + 1, obj);
 }
 
-bool ray::TraceRay(const estl::vector::Vector<double, 3>& start,
-                   const estl::vector::Vector<double, 3>& dir,
+bool ray::TraceRay(const estl::base::Vec3d& start, const estl::base::Vec3d& dir,
                    const std::vector<std::unique_ptr<Object>>& objs,
                    IntersectData& inter, bool base_ray) {
   inter.obj = NULL;
@@ -295,4 +284,48 @@ bool ray::TraceRay(const estl::vector::Vector<double, 3>& start,
     }
   }
   return (inter.obj != NULL);
+}
+double ray::ShadowRay(const std::unique_ptr<Light>& light,
+                      const IntersectData& inter,
+                      const std::vector<std::unique_ptr<Object>>& objs,
+                      estl::base::Vec3d& light_dir,
+                      estl::base::Vec3d& light_intensity) {
+  IntersectData isec;
+  double vis = 1.0;
+  light->Illuminate(inter.point, light_dir, light_intensity, isec.t_near);
+  if (light->type_ == DISTANT || light->type_ == POINT) {
+    vis = !TraceRay(inter.point + (light_dir * -bias), light_dir * -1.0, objs,
+                    isec, false);
+    if (isec.obj == inter.obj) {
+      vis = 1.0;
+    }
+  } else if (light->type_ == AREA) {
+    AreaLight* area = dynamic_cast<AreaLight*>(light.get());
+    Vec3d u_vec, v_vec;
+    u_vec = Normalize(Vec3d(area->direction_.y, -area->direction_.x, 0));
+    v_vec = Cross(area->direction_, u_vec);
+    vis = 0.0;
+    unsigned sample_count = area->samples_ * area->samples_;
+    double step_size_u = area->width_ / area->samples_;
+    double step_size_v = area->height_ / area->samples_;
+    for (double u = -area->width_ / 2.0; u < area->width_ / 2.0;
+         u += area->width_ / area->samples_) {
+      for (double v = -area->height_ / 2.0; v < area->height_ / 2.0;
+           v += area->height_ / area->samples_) {
+        Vec3d point = area->position_ + u_vec * (u + Rand(0.0, step_size_u)) +
+                      v_vec * (v + Rand(0.0, step_size_v));
+        light_dir = inter.point - point;
+        isec.t_near = Length(light_dir);
+        light_dir /= isec.t_near;
+        bool ray_vis = !TraceRay(inter.point + (light_dir * -bias),
+                                 light_dir * -1.0, objs, isec, false);
+        if (isec.obj == inter.obj) {
+          ray_vis = true;
+        }
+        vis += (ray_vis / (double)sample_count);
+      }
+    }
+  }
+  // vis = 0.0;
+  return vis;
 }

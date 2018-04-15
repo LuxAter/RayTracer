@@ -7,10 +7,11 @@
 #include <string>
 #include <vector>
 
-#include <estl/matrix.hpp>
-#include <estl/vector.hpp>
+#include <estl/basic/matrix.hpp>
+#include <estl/basic/vector.hpp>
 
 #include "material.hpp"
+#include "math.hpp"
 
 namespace ray {
 
@@ -24,23 +25,23 @@ class Object {
 
   void Translate(double x, double y, double z);
 
-  virtual bool Intersect(const estl::vector::Vector<double, 3>& start,
-                         const estl::vector::Vector<double, 3>& dir,
+  virtual bool Intersect(const estl::base::Vec3d& start,
+                         const estl::base::Vec3d& dir,
                          IntersectData& inter);
 
   std::string name;
   Type type = DIFFUSE;
 
  protected:
-  estl::matrix::Matrix<double, 4, 4> mat_, mat_inv_;
+  estl::base::Mat4d mat_, mat_inv_;
 };
 
 class Sphere : public Object {
  public:
   Sphere(const double& radius, Material mat = Material());
 
-  bool Intersect(const estl::vector::Vector<double, 3>& start,
-                 const estl::vector::Vector<double, 3>& dir,
+  bool Intersect(const estl::base::Vec3d& start,
+                 const estl::base::Vec3d& dir,
                  IntersectData& inter);
 
  protected:
@@ -50,33 +51,33 @@ class Sphere : public Object {
 
 class Plane : public Object {
  public:
-  Plane(const estl::vector::Vector<double, 3>& origin,
-        const estl::vector::Vector<double, 3>& normal,
+  Plane(const estl::base::Vec3d& origin,
+        const estl::base::Vec3d& normal,
         Material mat = Material());
 
-  bool Intersect(const estl::vector::Vector<double, 3>& start,
-                 const estl::vector::Vector<double, 3>& dir,
+  bool Intersect(const estl::base::Vec3d& start,
+                 const estl::base::Vec3d& dir,
                  IntersectData& inter);
 
  protected:
   Material material_;
   double constant_;
-  estl::vector::Vector<double, 3> origin_, normal_;
+  estl::base::Vec3d origin_, normal_;
 };
 
 class Circle : public Object {
  public:
-  Circle(const estl::vector::Vector<double, 3>& origin,
-         const estl::vector::Vector<double, 3>& normal, const double& radius,
+  Circle(const estl::base::Vec3d& origin,
+         const estl::base::Vec3d& normal, const double& radius,
          Material mat = Material());
-  bool Intersect(const estl::vector::Vector<double, 3>& start,
-                 const estl::vector::Vector<double, 3>& dir,
+  bool Intersect(const estl::base::Vec3d& start,
+                 const estl::base::Vec3d& dir,
                  IntersectData& inter);
 
  protected:
   Material material_;
   double constant_, radius_;
-  estl::vector::Vector<double, 3> origin_, normal_;
+  estl::base::Vec3d origin_, normal_;
 };
 
 // class Object {
@@ -96,16 +97,16 @@ class Circle : public Object {
 //
 //   void Translate(double x, double y, double z);
 //
-//   bool IntersectSphere(const estl::vector::Vector<double, 3>& start,
-//                        const estl::vector::Vector<double, 3>& vec, double&
+//   bool IntersectSphere(const estl::base::Vec3d& start,
+//                        const estl::base::Vec3d& vec, double&
 //                        t);
-//   bool IntersectPlane(const estl::vector::Vector<double, 3>& start,
-//                       const estl::vector::Vector<double, 3>& vec, double& t);
-//   bool IntersectPolygon(estl::vector::Vector<double, 3> start,
-//                         estl::vector::Vector<double, 3> vec, double& t,
+//   bool IntersectPlane(const estl::base::Vec3d& start,
+//                       const estl::base::Vec3d& vec, double& t);
+//   bool IntersectPolygon(estl::base::Vec3d start,
+//                         estl::base::Vec3d vec, double& t,
 //                         Material& mat);
-//   bool Intersect(const estl::vector::Vector<double, 3>& start,
-//                  const estl::vector::Vector<double, 3>& dir, Intersect&
+//   bool Intersect(const estl::base::Vec3d& start,
+//                  const estl::base::Vec3d& dir, Intersect&
 //                  inter);
 //
 //   Type type = SPHERE;
@@ -113,11 +114,11 @@ class Circle : public Object {
 //   double plane_const = 0;
 //   std::vector<double> vertices;
 //   std::vector<double> vertex_normals;
-//   estl::vector::Vector<double, 3> center = {{0, 0, 0}};
+//   estl::base::Vec3d center = {{0, 0, 0}};
 //   std::array<double, 3> value_max = {{0, 0, 0}};
 //   std::map<Material, std::vector<std::array<std::array<int, 3>, 3>>> faces;
 //   Material global_mat;
-//   estl::matrix::Matrix<double, 4, 4> mat, mat_inv;
+//   estl::base::Mat4d mat, mat_inv;
 //
 //  private:
 //   std::array<std::array<int, 3>, 3> ParseFace(std::string str);
@@ -126,19 +127,19 @@ class Circle : public Object {
 struct IntersectData {
   double t_near = INFINITY;
   Material mat;
-  estl::vector::Vector<double, 3> normal;
-  estl::vector::Vector<double, 3> point;
+  estl::base::Vec3d normal;
+  estl::base::Vec3d point;
   const Object* obj;
 };
 
 std::vector<std::unique_ptr<Object>> ParseObjFile(std::string file_path);
 std::unique_ptr<Object> GenerateSphere(double radius,
                                        Material mat = Material());
-std::unique_ptr<Object> GeneratePlane(estl::vector::Vector<double, 3> origin,
-                                      estl::vector::Vector<double, 3> normal,
+std::unique_ptr<Object> GeneratePlane(estl::base::Vec3d origin,
+                                      estl::base::Vec3d normal,
                                       Material mat = Material());
-std::unique_ptr<Object> GenerateCircle(estl::vector::Vector<double, 3> origin,
-                                       estl::vector::Vector<double, 3> normal,
+std::unique_ptr<Object> GenerateCircle(estl::base::Vec3d origin,
+                                       estl::base::Vec3d normal,
                                        double radius,
                                        Material mat = Material());
 }  // namespace ray

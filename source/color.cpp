@@ -1,6 +1,8 @@
 #include "color.hpp"
 
-#include <estl/vector.hpp>
+#include <math.h>
+
+#include <estl/basic/vector.hpp>
 #include <iostream>
 
 #include "math.hpp"
@@ -10,7 +12,7 @@ ray::Color::Color(int red, int green, int blue)
     : r(red / 256.0), g(green / 256.0), b(blue / 256.0) {}
 ray::Color::Color(double red, double green, double blue)
     : r(red), g(green), b(blue) {}
-ray::Color::Color(estl::vector::Vector<double, 3> vec)
+ray::Color::Color(estl::base::Vec3d vec)
     : r(vec[0]), g(vec[1]), b(vec[2]) {}
 
 void ray::Color::Clamp() {
@@ -19,8 +21,8 @@ void ray::Color::Clamp() {
   b = ::ray::Clamp(b, 0.0, 1.0);
 }
 
-estl::vector::Vector<double, 3> ray::Color::Vector(){
-  return estl::vector::Vector<double, 3>({r, g, b});
+estl::base::Vec3d ray::Color::Vector(){
+  return estl::base::Vec3d(r, g, b);
 }
 
 ray::Color& ray::Color::operator+=(const Color& rhs) {
