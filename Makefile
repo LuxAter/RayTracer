@@ -16,7 +16,7 @@ export BASE_PATH=$(shell pwd)
 
 export GRAPHICS=
 
-export COMPILER=clang++
+export COMPILER=g++
 ifeq ($(GRAPHICS),1)
 export CXXFLAGS= -MMD -std=c++11 -w -c -D GRAPHICS=1
 else
