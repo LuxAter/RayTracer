@@ -1,7 +1,7 @@
 #include <iostream>
 
 #ifdef GRAPHICS
-#include "entis/entis.h"
+#include "entis.h"
 #endif
 
 #define WIDTH 500

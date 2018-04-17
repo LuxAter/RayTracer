@@ -1,0 +1,6 @@
+[submodule "external/estl"]
+	path = external/estl
+	url = https://github.com/LuxAtrumStudio/estl
+[submodule "external/entis"]
+	path = external/entis
+	url = https://github.com/LuxAtrumStudio/entis

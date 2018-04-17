@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 
-#include <estl/basic/matrix.hpp>
-#include <estl/basic/vector.hpp>
+#include "basic/matrix.hpp"
+#include "basic/vector.hpp"
 
 #include "material.hpp"
 #include "math.hpp"

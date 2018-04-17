@@ -1,6 +1,6 @@
 #include "render.hpp"
 
-#include <entis/entis.h>
+#include "entis.h"
 #include <math.h>
 
 #include <chrono>
@@ -8,7 +8,7 @@
 #include <thread>
 #include <vector>
 
-#include <estl/basic/vector.hpp>
+#include "basic/vector.hpp"
 
 #include "light.hpp"
 #include "object.hpp"

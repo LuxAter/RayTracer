@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include <estl/basic/vector.hpp>
+#include "basic/vector.hpp"
 
 namespace ray {
   class Color{

@@ -1,8 +1,8 @@
 SHELL = /bin/bash
 
 export NAME= ray
-export LINK= -lentis -lxcb -lpthread -lpng
-export INCLUDE=
+export LINK= $(BASE_PATH)/$(BUILD_DIR)/libentis.a -lxcb -lpthread -lpng
+export INCLUDE=-I$(BASE_PATH)/$(EXTERNAL_DIR)/estl/estl -I$(BASE_PATH)/$(EXTERNAL_DIR)/entis/src
 export TYPE= TYPE(lib/exe)
 
 export SOURCE_DIR= source
@@ -66,7 +66,7 @@ endef
 all: external source test
 
 .PHONY : clean
-clean: clean-source clean-test
+clean: clean-external clean-source clean-test
 
 .PHONY : install
 install: source root-access install-source
