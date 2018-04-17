@@ -16,6 +16,7 @@ clean: entis_clean
 .PHONY : entis
 entis:
 	cd entis && $(MAKE)
+	mkdir ../build
 	cp entis/build/libentis.a ../build/
 
 .PHONY : entis_clean
