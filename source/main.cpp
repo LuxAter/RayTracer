@@ -1,22 +1,22 @@
 #include <iostream>
 
-#include <entis/entis.h>
+#ifdef GRAPHICS
+#include "entis/entis.h"
+#endif
 
-#define WIDTH 3840
-#define HEIGHT 2160
+#define WIDTH 500
+#define HEIGHT 500
 #define RES 1
 
+#include "light.hpp"
 #include "material.hpp"
 #include "object.hpp"
-#include "light.hpp"
-#include "render.hpp"
 #include "png.hpp"
+#include "render.hpp"
 
-// using namespace estl::vector;
 
 int main(int argc, char const* argv[]) {
-  // std::vector<std::unique_ptr<ray::Object>> objs =
-  // ray::ParseObjFile("./tree.obj");
+  srand(time(NULL));
   ray::Material mat, em, refl, mis;
   // Emerald=====
   em.ambient = {0.0215, 0.1745, 0.0215};
@@ -35,13 +35,13 @@ int main(int argc, char const* argv[]) {
   refl.diffuse = {1.0, 1.0, 1.0};
   refl.specular = {1.0, 1.0, 1.0};
   refl.specular_exp = 76.8;
-  refl.reflectivity = 0.75;
+  refl.reflectivity = 1.0;
   // Mat========
   mat.ambient = {1.0, 1.0, 1.0};
   mat.diffuse = {1.0, 1.0, 1.0};
   mat.specular = {1.0, 1.0, 1.0};
   mat.specular_exp = 76.8;
-  mat.reflectivity = 0.0;
+  mat.reflectivity = 0.4;
 
   mis.emissive = {0.0, 0.0, 0.0};
   mis.optical_denisty = 1.0;
@@ -61,39 +61,25 @@ int main(int argc, char const* argv[]) {
   em.illum = 1;
   std::vector<std::unique_ptr<ray::Object>> objs;
   std::vector<std::unique_ptr<ray::Light>> lights;
-  // COOL
-  // lights.push_back(ray::MakePointLight({0.0, 5.0, 10.0}, {1.0, 1.0, 1.0}));
-  lights.push_back(ray::MakeAreaLight({-5.0, 5.0, 10.0}, {0.0, -1.0, 0.0}, 1.0, 1.0, 8, {1.0, 0.0, 0.0}));
-  lights.push_back(ray::MakeAreaLight({0.0, 5.0, 10.0}, {0.0, -1.0, 0.0}, 1.0, 1.0, 8, {0.0, 1.0, 0.0}));
-  lights.push_back(ray::MakeAreaLight({5.0, 5.0, 10.0}, {0.0, -1.0, 0.0}, 1.0, 1.0, 8, {0.0, 0.0, 1.0}));
-  // lights.push_back(ray::MakePointLight({-20.0, 5.0, 9.0}, {0.0, 0.0, 1.0}));
-  // lights.push_back(ray::MakePointLight({0.0, 10.0, 14.0}, {0.0, 1.0, 0.0}));
-  // lights.push_back(ray::MakePointLight({{5.0, 3.0, 5.0}}, {1.0, 1.0, 1.0}));
+  lights.push_back(ray::MakeAreaLight({0.0, 10.0, 5.0}, {0.0, -1.0, 0.0}, 1.0,
+                                      1.0, 1, {1.0, 1.0, 1.0}));
   objs.push_back(ray::GeneratePlane({0, -2, 0}, {0.0, 1.0, 0.0}, mis));
   objs.push_back(ray::GeneratePlane({0, 0, 15}, {0.0, 0.0, -1.0}, mis));
   objs.push_back(ray::GenerateSphere(1, mat));
-  objs.back()->Translate(3, 0, 10);
-  objs.push_back(ray::GenerateSphere(1, mat));
-  objs.back()->Translate(-3, 0, 10);
-  objs.push_back(ray::GenerateSphere(1, refl));
   objs.back()->Translate(0, 0, 10);
 
-  // FALLOFF
-  // lights.push_back(ray::MakePointLight({{0.0, -0.75, 10.0}}, {1.0, 1.0, 1.0}, 20));
-  // objs.push_back(ray::GeneratePlane({0, -1, 0}, {0.0, 1.0, 0.0}, mat));
-  
-  // entis_init("Ray", WIDTH, HEIGHT, 0, NULL);
-  // entis_clear();
-  // entis_set_color_drgb(1.0, 0.0, 1.0);
-  // ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::MULTI_THREAD, 8);
-  ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::PNG, ray::MULTI_THREAD, 8);
-  
-  // ray::Png png("test.png", 100, 100);
-  // png.Fill(0.0, 1.6, 1.0);
-  // png.Write();
-
-  // entis_wait_button();
-  // entis_term();
+#ifdef GRAPHICS
+  entis_init("Ray", WIDTH, HEIGHT, 0, NULL);
+  entis_clear();
+  entis_set_color_drgb(1.0, 0.0, 1.0);
+  ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::ESTL,
+              ray::SCATTER_PASS, 31);
+  entis_wait_button();
+  entis_term();
+#else
+  ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::PNG,
+              ray::MULTI_THREAD, 8);
+#endif
 
   return 0;
 }

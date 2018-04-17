@@ -173,10 +173,8 @@ void ray::RenderMultiThreadPass(
     const unsigned& height, const std::vector<std::unique_ptr<Object>>& objs,
     const std::vector<std::unique_ptr<Light>>& lights, const unsigned passes,
     RenderFormat fmt) {
-  // std::vector<std::thread> threads;
   std::vector<std::future<std::vector<Color>>> threads;
   double ppt = height / passes;
-  // unsigned position = 0;
   for (unsigned id = 0; id < passes - 1; ++id) {
     threads.push_back(
         std::async(std::launch::async, RenderThread, std::ref(scale),
@@ -216,25 +214,9 @@ void ray::RenderMultiThreadPass(
       }
     }
   }
-  // for (unsigned k = passes - 1, i = 0; k < pixels && i < colors.size();
-  //      k += passes, ++i) {
-  //   entis_set_color_drgb(colors[i].r, colors[i].g, colors[i].b);
-  //   unsigned y = k % width;
-  //   unsigned x = (k - i) / width;
-  //   entis_point(x, y);
-  // }
-  // for (unsigned id = 0; id < passes - 1; ++id) {
-  //   colors = threads[id].get();
-  //   for (unsigned k = id, i = 0; k < pixels && i < colors.size();
-  //        k += passes, ++i) {
-  //     entis_set_color_drgb(colors[i].r, colors[i].g, colors[i].b);
-  //     unsigned y = k % width;
-  //     unsigned x = (k - i) / width;
-  //     entis_point(x, y);
-  //   }
-  // threads[id].join();
-  // }
-  entis_update();
+  if (fmt == ESTL || fmt == ESTL_PNG) {
+    entis_update();
+  }
 }
 std::vector<ray::Color> ray::RenderThread(
     const double& scale, const double& aspect, const unsigned& width,
@@ -378,6 +360,5 @@ double ray::ShadowRay(const std::unique_ptr<Light>& light,
       }
     }
   }
-  // vis = 0.0;
   return vis;
 }

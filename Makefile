@@ -14,8 +14,14 @@ export DOC_DIR= docs
 
 export BASE_PATH=$(shell pwd)
 
+export GRAPHICS=
+
 export COMPILER=clang++
-export CXXFLAGS= -MMD -std=c++17 -w -c
+ifeq ($(GRAPHICS),1)
+export CXXFLAGS= -MMD -std=c++11 -w -c -D GRAPHICS=1
+else
+export CXXFLAGS= -MMD -std=c++11 -w -c
+endif
 
 export INSTALL_PATH=/usr/local
 
