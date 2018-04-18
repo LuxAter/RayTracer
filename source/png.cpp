@@ -1,3 +1,4 @@
+#ifndef GRAPHICS
 #include "png.hpp"
 
 #include <png.h>
@@ -115,3 +116,4 @@ bool ray::Png::Write() {
 
   return true;
 }
+#endif

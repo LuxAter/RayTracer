@@ -1,6 +1,8 @@
 #ifndef RAY_PNG_HPP_
 #define RAY_PNG_HPP_
 
+#ifndef GRAPHICS
+
 #include <string>
 #include <vector>
 
@@ -29,4 +31,5 @@ class Png {
   unsigned char** pixel_data_;
 };
 }  // namespace ray
+#endif
 #endif  // RAY_PNG_HPP_

@@ -1,7 +1,7 @@
 #include "render.hpp"
 
-#include "entis.h"
 #include <math.h>
+#include "entis.h"
 
 #include <chrono>
 #include <memory>
@@ -16,15 +16,15 @@
 
 #include <iostream>
 
-#define SINGLEPASS
-
 using namespace estl::base;
 
-unsigned max_depth = 10;
+unsigned max_depth = 5;
 double bias = 0.001;
 Vec3d eye, coi, up;
 ray::Color background_color = {0.2, 0.2, 0.3};
+#ifndef GRAPHICS
 ray::Png image;
+#endif
 
 void ray::Render(const std::vector<std::unique_ptr<Object>>& objs,
                  const std::vector<std::unique_ptr<Light>>& lights,
@@ -33,10 +33,10 @@ void ray::Render(const std::vector<std::unique_ptr<Object>>& objs,
   auto start = std::chrono::high_resolution_clock::now();
   double scale = tan(fov / 2.0);
   double aspect = width / static_cast<double>(height);
-  if (fmt == ESTL_PNG || fmt == PNG) {
-    std::cout << "Rendering " << width << "x" << height << " to img.png\n";
-    image = Png("img.png", width, height);
-  }
+#ifndef GRAPHICS
+  std::cout << "Rendering " << width << "x" << height << " to img.png\n";
+  image = Png("img.png", width, height);
+#endif
   switch (style) {
     case SINGLE_PASS: {
       RenderSinglePass(scale, aspect, width, height, objs, lights, fmt);
@@ -72,12 +72,11 @@ void ray::Render(const std::vector<std::unique_ptr<Object>>& objs,
       diff - sec - milli - micro);
   std::cout << sec.count() << "s " << milli.count() << "ms " << micro.count()
             << "μs " << nano.count() << "ns\n";
-  if (fmt == ESTL_PNG || fmt == PNG) {
-    image.Write();
-  }
-  if (fmt == ESTL_PNG || fmt == ESTL) {
-    entis_update();
-  }
+#ifdef GRAPHICS
+  entis_update();
+#else
+  image.Write();
+#endif
 }
 
 void ray::RenderSinglePass(const double& scale, const double& aspect,
@@ -89,13 +88,12 @@ void ray::RenderSinglePass(const double& scale, const double& aspect,
     for (unsigned j = 0; j < width; j += 1) {
       Color color =
           RenderPixel(scale, aspect, width, height, objs, lights, i, j);
-      if (fmt == ESTL || fmt == ESTL_PNG) {
-        entis_set_color_drgb(color.r, color.g, color.b);
-        entis_point(j, i);
-      }
-      if (fmt == PNG || fmt == ESTL_PNG) {
-        image.Plot(j, i, color.r, color.g, color.b);
-      }
+#ifdef GRAPHICS
+      entis_set_color_drgb(color.r, color.g, color.b);
+      entis_point(j, i);
+#else
+      image.Plot(j, i, color.r, color.g, color.b);
+#endif
     }
   }
 }
@@ -107,17 +105,16 @@ void ray::RenderHorizontalPass(
     for (unsigned j = 0; j < width; ++j) {
       Color color =
           RenderPixel(scale, aspect, width, height, objs, lights, i, j);
-      if (fmt == ESTL || fmt == ESTL_PNG) {
-        entis_set_color_drgb(color.r, color.g, color.b);
-        entis_point(j, i);
-      }
-      if (fmt == PNG || fmt == ESTL_PNG) {
-        image.Plot(j, i, color.r, color.g, color.b);
-      }
+#ifdef GRAPHICS
+      entis_set_color_drgb(color.r, color.g, color.b);
+      entis_point(j, i);
+#else
+      image.Plot(j, i, color.r, color.g, color.b);
+#endif
     }
-    if (fmt == ESTL || fmt == ESTL_PNG) {
-      entis_update();
-    }
+#ifdef GRAPHICS
+    entis_update();
+#endif
   }
 }
 void ray::RenderVerticalPass(const double& scale, const double& aspect,
@@ -129,17 +126,16 @@ void ray::RenderVerticalPass(const double& scale, const double& aspect,
     for (unsigned i = 0; i < height; ++i) {
       Color color =
           RenderPixel(scale, aspect, width, height, objs, lights, i, j);
-      if (fmt == ESTL || fmt == ESTL_PNG) {
-        entis_set_color_drgb(color.r, color.g, color.b);
-        entis_point(j, i);
-      }
-      if (fmt == PNG || fmt == ESTL_PNG) {
-        image.Plot(j, i, color.r, color.g, color.b);
-      }
+#ifdef GRAPHICS
+      entis_set_color_drgb(color.r, color.g, color.b);
+      entis_point(j, i);
+#else
+      image.Plot(j, i, color.r, color.g, color.b);
+#endif
     }
-    if (fmt == ESTL || fmt == ESTL_PNG) {
-      entis_update();
-    }
+#ifdef GRAPHICS
+    entis_update();
+#endif
   }
 }
 void ray::RenderScatterPass(const double& scale, const double& aspect,
@@ -154,17 +150,16 @@ void ray::RenderScatterPass(const double& scale, const double& aspect,
       unsigned i = (k - j) / width;
       Color color =
           RenderPixel(scale, aspect, width, height, objs, lights, i, j);
-      if (fmt == ESTL || fmt == ESTL_PNG) {
-        entis_set_color_drgb(color.r, color.g, color.b);
-        entis_point(j, i);
-      }
-      if (fmt == PNG || fmt == ESTL_PNG) {
-        image.Plot(j, i, color.r, color.g, color.b);
-      }
+#ifdef GRAPHICS
+      entis_set_color_drgb(color.r, color.g, color.b);
+      entis_point(j, i);
+#else
+      image.Plot(j, i, color.r, color.g, color.b);
+#endif
     }
-    if (fmt == ESTL || fmt == ESTL_PNG) {
-      entis_update();
-    }
+#ifdef GRAPHICS
+    entis_update();
+#endif
   }
 }
 
@@ -187,13 +182,12 @@ void ray::RenderMultiThreadPass(
   for (unsigned i = ppt * (passes - 1); i < height; ++i) {
     for (unsigned j = 0; j < width; ++j) {
       Color color = colors[pos];
-      if (fmt == ESTL || fmt == ESTL_PNG) {
-        entis_set_color_drgb(color.r, color.g, color.b);
-        entis_point(j, i);
-      }
-      if (fmt == PNG || fmt == ESTL_PNG) {
-        image.Plot(j, i, color.r, color.g, color.b);
-      }
+#ifdef GRAPHICS
+      entis_set_color_drgb(color.r, color.g, color.b);
+      entis_point(j, i);
+#else
+      image.Plot(j, i, color.r, color.g, color.b);
+#endif
       pos++;
     }
   }
@@ -203,20 +197,19 @@ void ray::RenderMultiThreadPass(
     for (unsigned i = ppt * id; i < ppt * (id + 1); ++i) {
       for (unsigned j = 0; j < width; ++j) {
         Color color = colors[pos];
-        if (fmt == ESTL || fmt == ESTL_PNG) {
-          entis_set_color_drgb(color.r, color.g, color.b);
-          entis_point(j, i);
-        }
-        if (fmt == PNG || fmt == ESTL_PNG) {
-          image.Plot(j, i, color.r, color.g, color.b);
-        }
+#ifdef GRAPHICS
+        entis_set_color_drgb(color.r, color.g, color.b);
+        entis_point(j, i);
+#else
+        image.Plot(j, i, color.r, color.g, color.b);
+#endif
         pos++;
       }
     }
   }
-  if (fmt == ESTL || fmt == ESTL_PNG) {
-    entis_update();
-  }
+#ifdef GRAPHICS
+  entis_update();
+#endif
 }
 std::vector<ray::Color> ray::RenderThread(
     const double& scale, const double& aspect, const unsigned& width,
