@@ -11,7 +11,7 @@ namespace ray {
   class Material{
     public:
       Material();
-      Material(Color color, double spec, double opt, double reflect);
+      Material(Color color, double spec, double reflect);
       Material(std::string str);
 
       std::string name;

@@ -13,12 +13,12 @@
 #include <iostream>
 
 ray::Material::Material() {}
-ray::Material::Material(Color color, double spec, double opt, double reflect) {
+ray::Material::Material(Color color, double spec, double reflect) {
   ambient = color;
   diffuse = color;
   specular = color;
   specular_exp = spec;
-  optical_denisty = opt;
+  optical_denisty = 1.0;
   dissolve = 1.0;
   reflectivity = reflect;
   illum = 1;
