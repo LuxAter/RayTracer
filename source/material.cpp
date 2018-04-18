@@ -13,6 +13,16 @@
 #include <iostream>
 
 ray::Material::Material() {}
+ray::Material::Material(Color color, double spec, double opt, double reflect) {
+  ambient = color;
+  diffuse = color;
+  specular = color;
+  specular_exp = spec;
+  optical_denisty = opt;
+  dissolve = 1.0;
+  reflectivity = reflect;
+  illum = 1;
+}
 ray::Material::Material(std::string str) {
   std::istringstream iss(str);
   std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
@@ -113,6 +123,6 @@ std::ostream& ray::operator<<(std::ostream& out, Material mat) {
   return out;
 }
 
-bool ray::operator<(const Material& lhs, const Material& rhs){
+bool ray::operator<(const Material& lhs, const Material& rhs) {
   return lhs.name < rhs.name;
 }

@@ -1,7 +1,7 @@
 SHELL = /bin/bash
 
 export NAME= ray
-export LINK= $(BASE_PATH)/$(BUILD_DIR)/libentis.a -lxcb -lpthread -lpng
+export LINK= $(BASE_PATH)/$(EXTERNAL_DIR)/entis/build/libentis.a -lxcb -lpthread -lpng
 export INCLUDE=-I$(BASE_PATH)/$(EXTERNAL_DIR)/estl/estl -I$(BASE_PATH)/$(EXTERNAL_DIR)/entis/src
 export TYPE= TYPE(lib/exe)
 
@@ -14,10 +14,10 @@ export DOC_DIR= docs
 
 export BASE_PATH=$(shell pwd)
 
-export GRAPHICS=
+export GRAPHICS=0
 
 export COMPILER=g++
-ifeq ($(GRAPHICS),1)
+ifeq ($(GRAPHICS),0)
 export CXXFLAGS= -MMD -std=c++11 -w -c -D GRAPHICS=1
 else
 export CXXFLAGS= -MMD -std=c++11 -w -c
