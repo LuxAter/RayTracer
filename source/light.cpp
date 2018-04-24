@@ -43,8 +43,8 @@ void ray::PointLight::Illuminate(const estl::base::Vec3d& point,
   dist = Length(dir);
   dir /= dist;
   if (intensity_ != -1) {
-    intensity = Vec3d(color_.r, color_.g, color_.b) * intensity_ /
-                (4 * M_PI * pow(dist, 2));
+    intensity = Vec3d(color_.r, color_.g, color_.b) * Clamp(intensity_ /
+                (4 * M_PI * pow(dist, 2)), 0.0, 1.0);
   } else {
     intensity = Vec3d(color_.r, color_.g, color_.b);
   }

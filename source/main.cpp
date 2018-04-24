@@ -81,24 +81,43 @@ void scene_3(std::vector<std::unique_ptr<ray::Object>>& objs,
   }
 }
 
+void scene_4(std::vector<std::unique_ptr<ray::Object>>& objs,
+             std::vector<std::unique_ptr<ray::Light>>& lights) {
+  ray::Material mat({1.0, 1.0, 1.0}, 80.0, 0.0);
+  ray::Material grey({0.8, 0.8, 0.8}, 30.0, 0.0);
+
+  lights.push_back(ray::MakePointLight({0.0, 0.0, 50}, {1.0, 1.0, 1.0}, 1500));
+  objs.push_back(ray::GeneratePlane({0, 0, 51}, {0, 0, -1}, mat));
+  objs.push_back(ray::GenerateSphere(2, grey));
+  objs.back()->Translate(4, 4, 51);
+  objs.push_back(ray::GenerateSphere(2, grey));
+  objs.back()->Translate(8, 0, 51);
+  objs.push_back(ray::GenerateSphere(2, grey));
+  objs.back()->Translate(-4, 4, 51);
+  objs.push_back(ray::GenerateSphere(2, grey));
+  objs.back()->Translate(0, -8, 51);
+}
+
+
 int main(int argc, char const* argv[]) {
   srand(time(NULL));
   std::vector<std::unique_ptr<ray::Object>> objs;
   std::vector<std::unique_ptr<ray::Light>> lights;
 
   // SELECT SAMPLE IMAGE
-  scene_1(objs, lights);
+  // scene_1(objs, lights);
   // scene_2(objs, lights);
   // scene_3(objs, lights);
+  scene_4(objs, lights);
 
 #ifdef GRAPHICS
   entis_init("Ray", WIDTH, HEIGHT, 0, NULL);
   entis_clear();
-  // ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::ESTL,
-  //             ray::SCATTER_PASS, 31);
-  // Uncomment this for faster preformance, but no live preview.
   ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::ESTL,
-              ray::MULTI_THREAD, 8);
+              ray::SCATTER_PASS, 31);
+  // Uncomment this for faster preformance, but no live preview.
+  // ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::ESTL,
+  //             ray::MULTI_THREAD, 8);
   entis_wait_button();
   entis_term();
 #else
