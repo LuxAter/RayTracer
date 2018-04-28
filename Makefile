@@ -20,7 +20,7 @@ ifeq ($(PNG),0)
 export LINK= $(BASE_PATH)/$(EXTERNAL_DIR)/entis/build/libentis.a -lxcb -lpthread
 export CXXFLAGS= -MMD -std=c++11 -w -c -D GRAPHICS=1
 else
-export LINK= $(BASE_PATH)/$(EXTERNAL_DIR)/entis/build/libentis.a -lxcb -lpthread -lpng
+export LINK= $(BASE_PATH)/$(BUILD_DIR)/libpng/lib/libpng.so -lxcb -lpthread
 export CXXFLAGS= -MMD -std=c++11 -w -c
 endif
 
@@ -29,7 +29,7 @@ export INSTALL_PATH=/usr/local
 # export GCOV_LINK = --coverage
 # export GCOV_FLAG = -fprofile-arcs -ftest-coverage
 
-export COMMON_INCLUDE=-I$(BASE_PATH)/$(INCLUDE_DIR) $(INCLUDE)
+export COMMON_INCLUDE=-I$(BASE_PATH)/$(INCLUDE_DIR) -I$(BASE_PATH)/$(BUILD_DIR)/libpng/include $(INCLUDE)
 
 export SECTION_COLOR=\033[1;97m
 export TARGET_COLOR=\033[0;34m
