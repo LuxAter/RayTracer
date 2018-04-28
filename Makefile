@@ -20,7 +20,7 @@ ifeq ($(PNG),0)
 export LINK= $(BASE_PATH)/$(EXTERNAL_DIR)/entis/build/libentis.a -lxcb -lpthread
 export CXXFLAGS= -MMD -std=c++11 -w -c -D GRAPHICS=1
 else
-export LINK= $(BASE_PATH)/$(BUILD_DIR)/libpng/lib/libpng.so -lxcb -lpthread -L$(BASE_PATH)/$(BUILD_DIR)/libpng/lib
+export LINK= -L$(BASE_PATH)/$(BUILD_DIR)/libpng/lib -lpng -lxcb -lpthread
 export CXXFLAGS= -MMD -std=c++11 -w -c
 endif
 

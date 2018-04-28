@@ -105,10 +105,10 @@ int main(int argc, char const* argv[]) {
   std::vector<std::unique_ptr<ray::Light>> lights;
 
   // SELECT SAMPLE IMAGE
-  // scene_1(objs, lights);
+  scene_1(objs, lights);
   // scene_2(objs, lights);
   // scene_3(objs, lights);
-  scene_4(objs, lights);
+  // scene_4(objs, lights);
 
 #ifdef GRAPHICS
   entis_init("Ray", WIDTH, HEIGHT, 0, NULL);

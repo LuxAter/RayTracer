@@ -34,7 +34,7 @@ void ray::Render(const std::vector<std::unique_ptr<Object>>& objs,
   double scale = tan(fov / 2.0);
   double aspect = width / static_cast<double>(height);
 #ifndef GRAPHICS
-  std::cout << "Rendering " << width << "x" << height << " to img.png\n";
+  std::cout << "Rendering " << width << "x" << height << " to img.png\n" << std::flush;
   image = Png("img.png", width, height);
 #endif
   switch (style) {
@@ -71,7 +71,7 @@ void ray::Render(const std::vector<std::unique_ptr<Object>>& objs,
   auto nano = std::chrono::duration_cast<std::chrono::nanoseconds>(
       diff - sec - milli - micro);
   std::cout << sec.count() << "s " << milli.count() << "ms " << micro.count()
-            << "μs " << nano.count() << "ns\n";
+            << "μs " << nano.count() << "ns\n" << std::flush;
 #ifdef GRAPHICS
   entis_update();
 #else
