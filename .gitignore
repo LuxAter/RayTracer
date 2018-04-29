@@ -3,6 +3,7 @@
 *.log
 *.swp
 build/*
+seq1/*
 {{Docs}}/html/*
 {{Docs}}/latex/*
 {{Docs}}/xml/*

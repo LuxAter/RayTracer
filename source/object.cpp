@@ -101,9 +101,8 @@ ray::Plane::Plane(const estl::base::Vec3d& origin,
   this->name = "plane";
 }
 bool ray::Plane::Intersect(const estl::base::Vec3d& start,
-                           const estl::base::Vec3d& dir,
-                           IntersectData& inter) {
-  Vec3d local_start = Dot(mat_inv_ , start);
+                           const estl::base::Vec3d& dir, IntersectData& inter) {
+  Vec3d local_start = Dot(mat_inv_, start);
   double a = Dot(normal_, dir);
   double b = constant_ - Dot(normal_, local_start);
   if (a == 0) {
@@ -119,8 +118,8 @@ bool ray::Plane::Intersect(const estl::base::Vec3d& start,
 }
 
 ray::Circle::Circle(const estl::base::Vec3d& origin,
-                    const estl::base::Vec3d& normal,
-                    const double& radius, Material mat)
+                    const estl::base::Vec3d& normal, const double& radius,
+                    Material mat)
     : Object(),
       material_(mat),
       constant_(-Dot(origin, normal)),
@@ -132,8 +131,7 @@ ray::Circle::Circle(const estl::base::Vec3d& origin,
 bool ray::Circle::Intersect(const estl::base::Vec3d& start,
                             const estl::base::Vec3d& dir,
                             IntersectData& inter) {
-  Vec3d local_start = Dot(mat_inv_, start),
-      dist;
+  Vec3d local_start = Dot(mat_inv_, start), dist;
   double a = Dot(normal_, dir);
   double b = Dot(normal_, local_start) - constant_;
   if (a == 0) {
@@ -152,16 +150,56 @@ bool ray::Circle::Intersect(const estl::base::Vec3d& start,
   return true;
 }
 
+ray::Triangle::Triangle(const estl::base::Vec3d& a, const estl::base::Vec3d& b,
+                        const estl::base::Vec3d& c, Material mat)
+    : Object(), material_(mat), a_(a), b_(b), c_(c) {
+  this->name = "triangle";
+}
+bool ray::Triangle::Intersect(const estl::base::Vec3d& start,
+                              const estl::base::Vec3d& dir,
+                              IntersectData& inter) {
+  Vec3d local_start = Dot(mat_inv_, start), dist;
+  Vec3d ab = b_ - a_;
+  Vec3d ac = c_ - a_;
+  Vec3d p_vec = Cross(dir, ac);
+  double det = Dot(ab, p_vec);
+  if(fabs(det) < 1e-8){
+    return false;
+  }
+  double inv_det = 1.0 / det;
+  Vec3d t_vec = local_start - a_;
+  double u = Dot(t_vec, p_vec) * inv_det;
+  if (u < 0 || u > 1){
+    return false;
+  }
+  Vec3d q_vec = Cross(t_vec, ab);
+  double v = Dot(dir, q_vec) * inv_det;
+  if(v < 0 || u + v > 1){
+    return false;
+  }
+  inter.t_near = Dot(ac, q_vec) * inv_det;
+  inter.mat = material_;
+  inter.point = start + (dir * inter.t_near);
+  inter.normal = Normalize(Cross(ac, ab));
+  return true;
+}
+
 std::unique_ptr<ray::Object> ray::GenerateSphere(double radius, Material mat) {
   return std::unique_ptr<Object>(new Sphere(radius, mat));
 }
-std::unique_ptr<ray::Object> ray::GeneratePlane(
-    estl::base::Vec3d origin,
-    estl::base::Vec3d normal, Material mat) {
+std::unique_ptr<ray::Object> ray::GeneratePlane(estl::base::Vec3d origin,
+                                                estl::base::Vec3d normal,
+                                                Material mat) {
   return std::unique_ptr<Object>(new Plane(origin * -1.0, normal, mat));
 }
-std::unique_ptr<ray::Object> ray::GenerateCircle(
-    estl::base::Vec3d origin,
-    estl::base::Vec3d normal, double radius, Material mat) {
+std::unique_ptr<ray::Object> ray::GenerateCircle(estl::base::Vec3d origin,
+                                                 estl::base::Vec3d normal,
+                                                 double radius, Material mat) {
   return std::unique_ptr<Object>(new Circle(origin, normal, radius, mat));
+}
+std::unique_ptr<ray::Object> ray::GenerateTriangle(estl::base::Vec3d a,
+                                         estl::base::Vec3d b,
+                                         estl::base::Vec3d c,
+                                         Material mat){
+  return std::unique_ptr<Object>(new Triangle(a, b, c, mat));
 }

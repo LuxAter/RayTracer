@@ -17,6 +17,8 @@ ray::Light::~Light() {}
 void ray::Light::Illuminate(const estl::base::Vec3d& point,
                             estl::base::Vec3d& dir,
                             estl::base::Vec3d& intensity, double& dist) {}
+void ray::Light::Move(const estl::base::Vec3d& pos) {}
+void ray::Light::Rotate(const estl::base::Vec3d& dir) {}
 
 ray::DistantLight::DistantLight(const estl::base::Vec3d dir, const Color& color,
                                 const double& i)
@@ -29,6 +31,9 @@ void ray::DistantLight::Illuminate(const estl::base::Vec3d& point,
   dir = direction_;
   intensity = Vec3d(color_.r, color_.g, color_.b) * intensity_;
   dist = INFINITY;
+}
+void ray::DistantLight::Rotate(const estl::base::Vec3d& dir) {
+  direction_ = dir;
 }
 
 ray::PointLight::PointLight(const estl::base::Vec3d position,
@@ -43,11 +48,14 @@ void ray::PointLight::Illuminate(const estl::base::Vec3d& point,
   dist = Length(dir);
   dir /= dist;
   if (intensity_ != -1) {
-    intensity = Vec3d(color_.r, color_.g, color_.b) * Clamp(intensity_ /
-                (4 * M_PI * pow(dist, 2)), 0.0, 1.0);
+    intensity = Vec3d(color_.r, color_.g, color_.b) *
+                Clamp(intensity_ / (4 * M_PI * pow(dist, 2)), 0.0, 1.0);
   } else {
     intensity = Vec3d(color_.r, color_.g, color_.b);
   }
+}
+void ray::PointLight::Move(const estl::base::Vec3d& pos) {
+  position_ = pos;
 }
 
 ray::AreaLight::AreaLight(const estl::base::Vec3d& position,
@@ -75,7 +83,12 @@ void ray::AreaLight::Illuminate(const estl::base::Vec3d& point,
     intensity = Vec3d(color_.r, color_.g, color_.b);
   }
 }
-
+void ray::AreaLight::Move(const estl::base::Vec3d& pos) {
+  position_ = pos;
+}
+void ray::AreaLight::Rotate(const estl::base::Vec3d& dir) {
+  direction_ = dir;
+}
 
 std::unique_ptr<ray::Light> ray::MakeDistantLight(const estl::base::Vec3d dir,
                                                   const Color& color,

@@ -21,10 +21,16 @@ enum RenderStyle {
   MULTI_THREAD
 };
 
+void RenderSequence(const std::vector<std::unique_ptr<Object>>& objs,
+                    const std::vector<std::unique_ptr<Light>>& lights,
+                    unsigned width, unsigned height, double fov,
+                    RenderFormat fmt, RenderStyle style, int passes = 1,
+                    std::string base_name = "img/%05dimg.png", int index = -1);
 void Render(const std::vector<std::unique_ptr<Object>>& objs,
             const std::vector<std::unique_ptr<Light>>& lights, unsigned width,
             unsigned height, double fov, RenderFormat fmt = ESTL,
-            RenderStyle style = SINGLE_PASS, int passes = 1);
+            RenderStyle style = SINGLE_PASS, int passes = 1,
+            std::string file_path = "img.png");
 
 void RenderSinglePass(const double& scale, const double& aspect,
                       const unsigned& width, const unsigned& height,

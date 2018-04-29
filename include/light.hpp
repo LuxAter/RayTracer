@@ -24,6 +24,8 @@ class Light {
   virtual void Illuminate(const estl::base::Vec3d& point,
                           estl::base::Vec3d& dir, estl::base::Vec3d& intensity,
                           double& dist);
+  virtual void Move(const estl::base::Vec3d& pos);
+  virtual void Rotate(const estl::base::Vec3d& dir);
   Color color_;
   double intensity_;
   LightType type_;
@@ -35,6 +37,7 @@ class DistantLight : public Light {
                const Color& color = {1.0, 1.0, 1.0}, const double& i = 1);
   void Illuminate(const estl::base::Vec3d& point, estl::base::Vec3d& dir,
                   estl::base::Vec3d& intensity, double& dist);
+  void Rotate(const estl::base::Vec3d& dir);
 
  protected:
   estl::base::Vec3d direction_;
@@ -46,6 +49,7 @@ class PointLight : public Light {
              const Color& color = {1.0, 1.0, 1.0}, const double& i = 1);
   void Illuminate(const estl::base::Vec3d& point, estl::base::Vec3d& dir,
                   estl::base::Vec3d& intensity, double& dist);
+  void Move(const estl::base::Vec3d& pos);
 
  protected:
   estl::base::Vec3d position_;
@@ -58,6 +62,8 @@ class AreaLight : public Light {
             const Color& color = {1.0, 1.0, 1.0}, const double& i = 1);
   void Illuminate(const estl::base::Vec3d& point, estl::base::Vec3d& dir,
                   estl::base::Vec3d& intensity, double& dist);
+  void Move(const estl::base::Vec3d& pos);
+  void Rotate(const estl::base::Vec3d& dir);
 
   estl::base::Vec3d position_, direction_;
   double width_, height_;

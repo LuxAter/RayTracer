@@ -98,23 +98,34 @@ void scene_4(std::vector<std::unique_ptr<ray::Object>>& objs,
   objs.back()->Translate(0, -8, 51);
 }
 
+void scene_5(std::vector<std::unique_ptr<ray::Object>>& objs,
+             std::vector<std::unique_ptr<ray::Light>>& lights) {
+  ray::Material mat({1.0, 1.0, 1.0}, 80.0, 0.0);
+  ray::Material grey({0.8, 0.8, 0.8}, 30.0, 0.0);
+  lights.push_back(ray::MakePointLight({0.0, 0.0, 15.0}, {1.0, 1.0, 1.0}));
+  objs.push_back(ray::GenerateTriangle({-0.5, -0.5, 10.0}, {0.0, 0.5, 10.0},
+                                       {0.5, -0.5, 10.0}, mat));
+}
 
-int main(int argc, char const* argv[]) {
-  srand(time(NULL));
+void scene_6(std::vector<std::unique_ptr<ray::Object>>& objs,
+             std::vector<std::unique_ptr<ray::Light>>& lights) {}
+
+void scene() {
   std::vector<std::unique_ptr<ray::Object>> objs;
   std::vector<std::unique_ptr<ray::Light>> lights;
-
   // SELECT SAMPLE IMAGE
   scene_1(objs, lights);
   // scene_2(objs, lights);
   // scene_3(objs, lights);
   // scene_4(objs, lights);
+  // scene_5(objs, lights);
+  // scene_5(objs, lights);
 
 #ifdef GRAPHICS
   entis_init("Ray", WIDTH, HEIGHT, 0, NULL);
   entis_clear();
   ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::ESTL,
-              ray::SCATTER_PASS, 31);
+              ray::SCATTER_PASS, 8);
   // Uncomment this for faster preformance, but no live preview.
   // ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::ESTL,
   //             ray::MULTI_THREAD, 8);
@@ -124,6 +135,47 @@ int main(int argc, char const* argv[]) {
   ray::Render(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::PNG,
               ray::MULTI_THREAD, 8);
 #endif
+}
 
+void series() {
+  std::vector<std::unique_ptr<ray::Object>> objs;
+  std::vector<std::unique_ptr<ray::Light>> lights;
+
+  ray::Material mirror({1.0, 1.0, 1.0}, 80.0, 1.0);
+  ray::Material mat({1.0, 1.0, 1.0}, 80.0, 0.0);
+
+  lights.push_back(ray::MakePointLight({0.0, 5.0, 7.0}, {1.0, 1.0, 1.0}));
+
+  objs.push_back(ray::GeneratePlane({0, -2, 0}, {0, 1, 0}, mat));
+  objs.push_back(ray::GeneratePlane({0, 0, 15}, {0, 0, -1}, mat));
+
+  objs.push_back(ray::GenerateSphere(1, mat));
+  objs.back()->Translate(-3, 0, 10);
+  objs.push_back(ray::GenerateSphere(1, mat));
+  objs.back()->Translate(3, 0, 10);
+  objs.push_back(ray::GenerateSphere(1, mirror));
+  objs.back()->Translate(0, 0, 10);
+  int id = 0;
+  for (double x = -10.0; x <= 10.0; x += 0.33) {
+    lights.back()->Move({x, 5.0, 7.0});
+    ray::RenderSequence(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::PNG,
+                        ray::MULTI_THREAD, 8, "seq1/%05dimg.png", id);
+    id++;
+  }
+  for (double x = 10.0; x >= -10.0; x -= 0.33) {
+    lights.back()->Move({x, 5.0, 7.0});
+    ray::RenderSequence(objs, lights, WIDTH, HEIGHT, M_PI / 4.0, ray::PNG,
+                        ray::MULTI_THREAD, 8, "seq1/%05dimg.png", id);
+    id++;
+  }
+}
+
+int main(int argc, char const* argv[]) {
+  srand(time(NULL));
+
+  // To Render a single image
+  // scene();
+  // To Render a series of images
+  series();
   return 0;
 }
