@@ -163,23 +163,96 @@ bool ray::Triangle::Intersect(const estl::base::Vec3d& start,
   Vec3d ac = c_ - a_;
   Vec3d p_vec = Cross(dir, ac);
   double det = Dot(ab, p_vec);
-  if(fabs(det) < 1e-8){
+  if (fabs(det) < 1e-8) {
     return false;
   }
   double inv_det = 1.0 / det;
   Vec3d t_vec = local_start - a_;
   double u = Dot(t_vec, p_vec) * inv_det;
-  if (u < 0 || u > 1){
+  if (u < 0 || u > 1) {
     return false;
   }
   Vec3d q_vec = Cross(t_vec, ab);
   double v = Dot(dir, q_vec) * inv_det;
-  if(v < 0 || u + v > 1){
+  if (v < 0 || u + v > 1) {
     return false;
   }
   inter.t_near = Dot(ac, q_vec) * inv_det;
   inter.mat = material_;
   inter.point = start + (dir * inter.t_near);
+  inter.normal = Normalize(Cross(ac, ab));
+  return true;
+}
+
+ray::Mesh::Mesh(const std::vector<estl::base::Vec3d>& verticies,
+                const std::vector<unsigned>& indicies, Material mat)
+    : Object(), material_(mat), verticies_(verticies), indicies_(indicies) {
+  this->name = "mesh";
+  for (auto& it : verticies_) {
+    radius_ = std::max(radius_, std::max(it.x, std::max(it.y, it.z)));
+  }
+  radius_square_ = radius_ * radius_;
+}
+
+bool ray::Mesh::Intersect(const estl::base::Vec3d& start,
+                          const estl::base::Vec3d& dir, IntersectData& inter) {
+  Vec3d local_start = Dot(mat_inv_, start);
+  double t0, t1;
+  double a = Dot(dir, dir);
+  double b = 2 * Dot(dir, local_start);
+  double c = Dot(local_start, local_start) - radius_square_;
+  if (Quadradic(a, b, c, t0, t1) == false) {
+    return false;
+  }
+  if (t0 > t1) {
+    std::swap(t0, t1);
+  }
+  if (t0 < 0) {
+    if (t1 < 0) {
+      return false;
+    }
+  }
+  bool intersect = false;
+  for (unsigned i = 0; i < indicies_.size(); i += 3) {
+    intersect = intersect ||
+                IntersectTriangle(local_start, dir, verticies_[indicies_[i]],
+                                  verticies_[indicies_[i + 1]],
+                                  verticies_[indicies_[i + 2]], inter);
+  }
+  if (intersect) {
+    inter.mat= material_;
+    inter.point = start + (dir * inter.t_near);
+  }
+  return intersect;
+}
+bool ray::Mesh::IntersectTriangle(const estl::base::Vec3d& start,
+                                  const estl::base::Vec3d& dir,
+                                  const estl::base::Vec3d& a,
+                                  const estl::base::Vec3d& b,
+                                  const estl::base::Vec3d& c, IntersectData& inter) {
+  Vec3d ab = c - a;
+  Vec3d ac = b - a;
+  Vec3d p_vec = Cross(dir, ac);
+  double det = Dot(ab, p_vec);
+  if ((det) < 1e-8) {
+    return false;
+  }
+  double inv_det = 1.0 / det;
+  Vec3d t_vec = start - a;
+  double u = Dot(t_vec, p_vec) * inv_det;
+  if (u < 0 || u > 1) {
+    return false;
+  }
+  Vec3d q_vec = Cross(t_vec, ab);
+  double v = Dot(dir, q_vec) * inv_det;
+  if (v < 0 || u + v > 1) {
+    return false;
+  }
+  double t = Dot(ac, q_vec) * inv_det;
+  if (t >= inter.t_near) {
+    return false;
+  }
+  inter.t_near = Dot(ac, q_vec) * inv_det;
   inter.normal = Normalize(Cross(ac, ab));
   return true;
 }
@@ -198,8 +271,14 @@ std::unique_ptr<ray::Object> ray::GenerateCircle(estl::base::Vec3d origin,
   return std::unique_ptr<Object>(new Circle(origin, normal, radius, mat));
 }
 std::unique_ptr<ray::Object> ray::GenerateTriangle(estl::base::Vec3d a,
-                                         estl::base::Vec3d b,
-                                         estl::base::Vec3d c,
-                                         Material mat){
+                                                   estl::base::Vec3d b,
+                                                   estl::base::Vec3d c,
+                                                   Material mat) {
   return std::unique_ptr<Object>(new Triangle(a, b, c, mat));
+}
+
+std::unique_ptr<ray::Object> ray::GenerateMesh(std::vector<estl::base::Vec3d> verticies,
+                                     std::vector<unsigned> indicies,
+                                     Material mat){
+  return std::unique_ptr<Object>(new Mesh(verticies, indicies, mat));
 }

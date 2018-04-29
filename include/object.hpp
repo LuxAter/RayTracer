@@ -86,6 +86,24 @@ class Triangle : public Object {
   estl::base::Vec3d a_, b_, c_;
 };
 
+class Mesh : public Object {
+ public:
+  Mesh(const std::vector<estl::base::Vec3d>& verticies,
+       const std::vector<unsigned>& indicies, Material mat = Material());
+  bool Intersect(const estl::base::Vec3d& start, const estl::base::Vec3d& dir,
+                 IntersectData& inter);
+  bool IntersectTriangle(const estl::base::Vec3d& start,
+                         const estl::base::Vec3d& dir,
+                         const estl::base::Vec3d& a, const estl::base::Vec3d& b,
+                         const estl::base::Vec3d& c, IntersectData& inter);
+
+ protected:
+  Material material_;
+  std::vector<estl::base::Vec3d> verticies_;
+  std::vector<unsigned> indicies_;
+  double radius_, radius_square_;
+};
+
 struct IntersectData {
   double t_near = INFINITY;
   Material mat;
@@ -107,6 +125,9 @@ std::unique_ptr<Object> GenerateTriangle(estl::base::Vec3d a,
                                          estl::base::Vec3d b,
                                          estl::base::Vec3d c,
                                          Material mat = Material());
+std::unique_ptr<Object> GenerateMesh(std::vector<estl::base::Vec3d> verticies,
+                                     std::vector<unsigned> indicies,
+                                     Material mat = Material());
 }  // namespace ray
 
 #endif  // RAY_OBJECT_HPP_
