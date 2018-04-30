@@ -91,6 +91,57 @@ bool ray::Sphere::Intersect(const estl::base::Vec3d& start,
   return true;
 }
 
+ray::SoftCube::SoftCube(const double& radius, Material mat)
+    : Object(),
+      material_(mat),
+      radius_(radius),
+      radius_quad_(radius * radius * radius * radius) {
+  this->name = "sphere";
+}
+
+bool ray::SoftCube::Intersect(const estl::base::Vec3d& start,
+                              const estl::base::Vec3d& dir,
+                              IntersectData& inter) {
+  Vec3d local_start = Dot(mat_inv_, start);
+  double t0, t1, t2, t3;
+  double a = Sum(Pow(dir, 4));
+  double b = 4 * Dot(Pow(dir, 3), local_start);
+  double c = 6 * Dot(Pow(dir, 2), Pow(local_start, 2));
+  double d = 4 * Dot(dir, Pow(local_start, 3));
+  double e = Sum(Pow(local_start, 4)) - radius_quad_;
+  if (Quartic(a, b, c, d, e, t0, t1, t2, t3) == false) {
+    return false;
+  }
+  if (t0 > t1) std::swap(t0, t1);
+  if (t0 > t2) std::swap(t0, t2);
+  if (t0 > t3) std::swap(t0, t3);
+  if (t1 > t2) std::swap(t1, t2);
+  if (t1 > t3) std::swap(t1, t3);
+  if (t2 > t3) std::swap(t2, t3);
+
+  if (t0 < 0) {
+    if (t1 < 0) {
+      if (t2 < 0) {
+        if (t3 < 0) {
+          return false;
+        } else {
+          inter.t_near = t3;
+        }
+      } else {
+        inter.t_near = t2;
+      }
+    } else {
+      inter.t_near = t1;
+    }
+  } else {
+    inter.t_near = t0;
+  }
+  inter.mat = material_;
+  inter.point = start + (dir * inter.t_near);
+  inter.normal = Normalize(local_start + (dir * inter.t_near));
+  return true;
+}
+
 ray::Plane::Plane(const estl::base::Vec3d& origin,
                   const estl::base::Vec3d& normal, Material mat)
     : Object(),
@@ -220,7 +271,7 @@ bool ray::Mesh::Intersect(const estl::base::Vec3d& start,
                                   verticies_[indicies_[i + 2]], inter);
   }
   if (intersect) {
-    inter.mat= material_;
+    inter.mat = material_;
     inter.point = start + (dir * inter.t_near);
   }
   return intersect;
@@ -229,7 +280,8 @@ bool ray::Mesh::IntersectTriangle(const estl::base::Vec3d& start,
                                   const estl::base::Vec3d& dir,
                                   const estl::base::Vec3d& a,
                                   const estl::base::Vec3d& b,
-                                  const estl::base::Vec3d& c, IntersectData& inter) {
+                                  const estl::base::Vec3d& c,
+                                  IntersectData& inter) {
   Vec3d ab = c - a;
   Vec3d ac = b - a;
   Vec3d p_vec = Cross(dir, ac);
@@ -260,6 +312,10 @@ bool ray::Mesh::IntersectTriangle(const estl::base::Vec3d& start,
 std::unique_ptr<ray::Object> ray::GenerateSphere(double radius, Material mat) {
   return std::unique_ptr<Object>(new Sphere(radius, mat));
 }
+std::unique_ptr<ray::Object> ray::GenerateSoftCube(double radius,
+                                                   Material mat) {
+  return std::unique_ptr<Object>(new SoftCube(radius, mat));
+}
 std::unique_ptr<ray::Object> ray::GeneratePlane(estl::base::Vec3d origin,
                                                 estl::base::Vec3d normal,
                                                 Material mat) {
@@ -277,8 +333,8 @@ std::unique_ptr<ray::Object> ray::GenerateTriangle(estl::base::Vec3d a,
   return std::unique_ptr<Object>(new Triangle(a, b, c, mat));
 }
 
-std::unique_ptr<ray::Object> ray::GenerateMesh(std::vector<estl::base::Vec3d> verticies,
-                                     std::vector<unsigned> indicies,
-                                     Material mat){
+std::unique_ptr<ray::Object> ray::GenerateMesh(
+    std::vector<estl::base::Vec3d> verticies, std::vector<unsigned> indicies,
+    Material mat) {
   return std::unique_ptr<Object>(new Mesh(verticies, indicies, mat));
 }

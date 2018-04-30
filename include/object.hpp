@@ -47,6 +47,18 @@ class Sphere : public Object {
   double radius_, radius_square_;
 };
 
+class SoftCube: public Object {
+ public:
+  SoftCube(const double& radius, Material mat = Material());
+
+  bool Intersect(const estl::base::Vec3d& start, const estl::base::Vec3d& dir,
+                 IntersectData& inter);
+
+ protected:
+  Material material_;
+  double radius_, radius_quad_;
+};
+
 class Plane : public Object {
  public:
   Plane(const estl::base::Vec3d& origin, const estl::base::Vec3d& normal,
@@ -114,6 +126,8 @@ struct IntersectData {
 
 std::vector<std::unique_ptr<Object>> ParseObjFile(std::string file_path);
 std::unique_ptr<Object> GenerateSphere(double radius,
+                                       Material mat = Material());
+std::unique_ptr<Object> GenerateSoftCube(double radius,
                                        Material mat = Material());
 std::unique_ptr<Object> GeneratePlane(estl::base::Vec3d origin,
                                       estl::base::Vec3d normal,

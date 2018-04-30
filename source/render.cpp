@@ -1,13 +1,14 @@
 #include "render.hpp"
 
 #include <math.h>
+#include <sys/stat.h>
 #include "entis.h"
 
 #include <chrono>
+#include <fstream>
 #include <memory>
 #include <thread>
 #include <vector>
-#include <fstream>
 
 #include "basic/vector.hpp"
 
@@ -32,18 +33,6 @@ void ray::RenderSequence(const std::vector<std::unique_ptr<Object>>& objs,
                          unsigned width, unsigned height, double fov,
                          RenderFormat fmt, RenderStyle style, int passes,
                          std::string base_name, int index) {
-  if (index == -1){
-    bool searching = true;
-    index = 0;
-    while(searching == true){
-      char buff[100];
-      snprintf(buff, sizeof(buff), base_name.c_str(), index);
-      std::string file_str = buff;
-      std::ifstream file(file_str);
-      searching = !file.good();
-      index++;
-    }
-  }
   char buff[100];
   snprintf(buff, sizeof(buff), base_name.c_str(), index);
   std::string file_str = buff;
@@ -61,6 +50,17 @@ void ray::Render(const std::vector<std::unique_ptr<Object>>& objs,
   std::cout << "Rendering " << width << "x" << height << " to " << file_path
             << "\n"
             << std::flush;
+
+  std::size_t pos = file_path.find_last_of("/\\");
+  struct stat info;
+  if (stat(file_path.substr(0, pos).c_str(), &info) != 0) {
+    const int dir_err =
+        mkdir(file_path.substr(0, pos).c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if (-1 == dir_err) {
+      printf("Error creating directory!n");
+      exit(1);
+    }
+  }
   image = Png(file_path, width, height);
 #endif
   switch (style) {
