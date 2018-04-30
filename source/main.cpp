@@ -18,7 +18,7 @@
 #include "scenes.hpp"
 #include "sequence.hpp"
 
-void scene(void (*setup)(std::vector<std::unique_ptr<ray::Object>>& std:vector<std::unique_ptr<ray::Light>>&)) {
+void scene(void (*setup)(std::vector<std::unique_ptr<ray::Object>>&, std::vector<std::unique_ptr<ray::Light>>&)) {
   std::vector<std::unique_ptr<ray::Object>> objs;
   std::vector<std::unique_ptr<ray::Light>> lights;
   setup(objs, lights);

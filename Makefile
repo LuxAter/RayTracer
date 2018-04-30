@@ -15,7 +15,7 @@ export BASE_PATH=$(shell pwd)
 
 export PNG=0
 
-export COMPILER=clang++
+export COMPILER=g++
 ifeq ($(PNG),0)
 export LINK= $(BASE_PATH)/$(EXTERNAL_DIR)/entis/build/libentis.a -lxcb -lpthread
 export CXXFLAGS= -MMD -std=c++11 -w -c -D GRAPHICS=1
